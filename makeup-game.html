@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Makeup Magic - Interactive Beauty Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Game Container */
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* Main Canvas */
+        #makeup-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: none;
+        }
+
+        /* Custom Cursor (Brush) */
+        #custom-cursor {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.8);
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            transition: width 0.2s, height 0.2s;
+            z-index: 100;
+            display: none;
+        }
+
+        #custom-cursor.active {
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.4), transparent);
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.6);
+        }
+
+        /* Particles Container */
+        #particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        .particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: radial-gradient(circle, #fff, transparent);
+            border-radius: 50%;
+            animation: float-up 2s ease-out forwards;
+            opacity: 0;
+        }
+
+        @keyframes float-up {
+            0% {
+                transform: translateY(0) scale(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-200px) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        /* Scene Overlay */
+        #scene-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            opacity: 1;
+            transition: opacity 0.5s;
+        }
+
+        #scene-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .scene-title {
+            font-size: 64px;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 40px rgba(255, 255, 255, 0.8);
+            margin-bottom: 20px;
+            animation: glow-pulse 2s infinite;
+        }
+
+        @keyframes glow-pulse {
+            0%, 100% { text-shadow: 0 0 40px rgba(255, 255, 255, 0.8); }
+            50% { text-shadow: 0 0 80px rgba(255, 255, 255, 1); }
+        }
+
+        .scene-subtitle {
+            font-size: 24px;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 40px;
+            letter-spacing: 2px;
+        }
+
+        .start-btn {
+            padding: 20px 60px;
+            font-size: 24px;
+            font-weight: 700;
+            color: #fff;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 40px rgba(240, 147, 251, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 60px rgba(240, 147, 251, 0.8);
+        }
+
+        /* HUD - Game Interface */
+        #hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 150;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 40px;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 20px 40px;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+        }
+
+        .progress-indicator {
+            color: #fff;
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .star-count {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #ffd700;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        /* Tools Panel */
+        #tools-panel {
+            position: absolute;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            pointer-events: all;
+        }
+
+        .tool-item {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 3px solid rgba(255, 255, 255, 0.5);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .tool-item:hover {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.3);
+            border-color: #fff;
+        }
+
+        .tool-item.active {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-color: #fff;
+            box-shadow: 0 0 30px rgba(240, 147, 251, 0.8);
+        }
+
+        .tool-icon {
+            font-size: 32px;
+            margin-bottom: 4px;
+        }
+
+        /* Color Palette */
+        #color-palette {
+            position: absolute;
+            left: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            pointer-events: all;
+        }
+
+        .color-swatch {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 4px solid transparent;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .color-swatch:hover {
+            transform: scale(1.15);
+        }
+
+        .color-swatch.active {
+            border-color: #fff;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
+        }
+
+        /* Intensity Slider */
+        #intensity-control {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 400px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 20px 30px;
+            border-radius: 30px;
+            backdrop-filter: blur(10px);
+            pointer-events: all;
+        }
+
+        .intensity-label {
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        .intensity-slider {
+            width: 100%;
+            height: 8px;
+            -webkit-appearance: none;
+            background: linear-gradient(90deg, transparent 0%, #f093fb 100%);
+            border-radius: 5px;
+            outline: none;
+        }
+
+        .intensity-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #fff;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+        }
+
+        .intensity-slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #fff;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+        }
+
+        /* Action Buttons */
+        #action-buttons {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+            pointer-events: all;
+        }
+
+        .action-btn {
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #fff;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 25px;
+            background: rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #fff;
+            transform: scale(1.05);
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-color: #fff;
+        }
+
+        .action-btn.primary:hover {
+            box-shadow: 0 0 30px rgba(240, 147, 251, 0.8);
+        }
+
+        /* Completion Modal */
+        #completion-modal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 500px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 30px;
+            padding: 50px;
+            text-align: center;
+            z-index: 300;
+            box-shadow: 0 20px 80px rgba(0, 0, 0, 0.5);
+            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        #completion-modal.show {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .completion-title {
+            font-size: 48px;
+            font-weight: 900;
+            color: #fff;
+            margin-bottom: 20px;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
+        }
+
+        .completion-stars {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .completion-message {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .unlock-badge {
+            display: inline-block;
+            padding: 10px 25px;
+            background: rgba(255, 215, 0, 0.3);
+            border: 2px solid #ffd700;
+            border-radius: 20px;
+            color: #ffd700;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 30px;
+            letter-spacing: 1px;
+        }
+
+        /* Face Canvas Overlay */
+        #face-layer {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            height: 500px;
+            pointer-events: none;
+        }
+
+        /* Zoom Animation */
+        .zoom-in {
+            animation: zoom-in-effect 0.5s ease-out;
+        }
+
+        @keyframes zoom-in-effect {
+            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+
+        /* Scene Transition */
+        .scene-transition {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, transparent 0%, rgba(255, 255, 255, 0.8) 100%);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 250;
+            animation: flash-transition 0.8s ease-out;
+        }
+
+        @keyframes flash-transition {
+            0% { opacity: 0; }
+            30% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        /* Loading Animation */
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 6px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 30px auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .scene-title { font-size: 36px; }
+            .scene-subtitle { font-size: 16px; }
+            .start-btn { padding: 15px 40px; font-size: 18px; }
+            #tools-panel { right: 15px; }
+            .tool-item { width: 60px; height: 60px; }
+            #color-palette { left: 15px; gap: 10px; }
+            .color-swatch { width: 45px; height: 45px; }
+            #intensity-control { width: 80%; }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <!-- Main Canvas -->
+        <canvas id="makeup-canvas"></canvas>
+
+        <!-- Face Layer (for makeup application) -->
+        <div id="face-layer"></div>
+
+        <!-- Custom Cursor -->
+        <div id="custom-cursor"></div>
+
+        <!-- Particles -->
+        <div id="particles"></div>
+
+        <!-- Scene Overlay -->
+        <div id="scene-overlay">
+            <div class="scene-title">Makeup Magic</div>
+            <div class="scene-subtitle">Transform Your Look</div>
+            <button class="start-btn" onclick="startGame()">Start Experience</button>
+        </div>
+
+        <!-- HUD -->
+        <div id="hud">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <div class="progress-indicator">
+                    <span id="current-step">Step 1</span> / <span id="total-steps">7</span>
+                </div>
+                <div class="star-count">
+                    ⭐ <span id="star-total">0</span>
+                </div>
+            </div>
+
+            <!-- Tools Panel -->
+            <div id="tools-panel">
+                <!-- Dynamically generated -->
+            </div>
+
+            <!-- Color Palette -->
+            <div id="color-palette">
+                <!-- Dynamically generated -->
+            </div>
+
+            <!-- Intensity Control -->
+            <div id="intensity-control">
+                <div class="intensity-label">Intensity</div>
+                <input type="range" class="intensity-slider" min="0" max="100" value="50" id="intensity-slider">
+            </div>
+
+            <!-- Action Buttons -->
+            <div id="action-buttons">
+                <button class="action-btn" onclick="undoLast()">Undo</button>
+                <button class="action-btn" onclick="clearAll()">Clear</button>
+                <button class="action-btn primary" onclick="completeStep()">Complete</button>
+            </div>
+        </div>
+
+        <!-- Completion Modal -->
+        <div id="completion-modal">
+            <div class="completion-title">Perfect!</div>
+            <div class="completion-stars">⭐⭐⭐</div>
+            <div class="completion-message">
+                You've mastered this step!<br>
+                Your skills are glowing!
+            </div>
+            <div class="unlock-badge">🎁 Unlocked: New Color Palette</div>
+            <button class="start-btn" onclick="nextScene()">Continue</button>
+        </div>
+    </div>
+
+    <!-- Audio (Placeholder - would be actual audio files) -->
+    <audio id="brush-sound" src="" preload="auto"></audio>
+    <audio id="complete-sound" src="" preload="auto"></audio>
+    <audio id="ambient-music" src="" loop preload="auto"></audio>
+
+    <script>
+        // ===========================
+        // GAME STATE
+        // ===========================
+        const gameState = {
+            currentScene: 0,
+            totalStars: 0,
+            unlockedColors: [],
+            intensity: 50,
+            currentTool: 'brush',
+            currentColor: '#ff8fa3',
+            isDrawing: false,
+            mousePos: { x: 0, y: 0 }
+        };
+
+        // ===========================
+        // SCENES CONFIGURATION
+        // ===========================
+        const scenes = [
+            {
+                name: 'Base Makeup',
+                subtitle: 'Apply foundation evenly',
+                tools: ['brush', 'sponge', 'blend'],
+                colors: ['#f5d5c8', '#f0c9b9', '#e8b49a', '#dda284'],
+                targetArea: 'face',
+                completionStars: 3
+            },
+            {
+                name: 'Contour',
+                subtitle: 'Sculpt and define',
+                tools: ['brush', 'blend'],
+                colors: ['#c89f91', '#b88977', '#a67763', '#8d6855'],
+                targetArea: 'cheeks',
+                completionStars: 3
+            },
+            {
+                name: 'Eyebrows',
+                subtitle: 'Frame your eyes',
+                tools: ['pencil', 'brush'],
+                colors: ['#5d4037', '#4e342e', '#3e2723', '#2c1810'],
+                targetArea: 'brows',
+                completionStars: 3
+            },
+            {
+                name: 'Eyeshadow',
+                subtitle: 'Add depth and color',
+                tools: ['brush', 'blend', 'shimmer'],
+                colors: ['#f8bbd0', '#e1bee7', '#c5cae9', '#b2dfdb'],
+                targetArea: 'eyes',
+                completionStars: 3
+            },
+            {
+                name: 'Eyeliner',
+                subtitle: 'Define your gaze',
+                tools: ['pencil', 'liquid'],
+                colors: ['#000000', '#4a2c2a', '#1a237e', '#004d40'],
+                targetArea: 'eyeliner',
+                completionStars: 3
+            },
+            {
+                name: 'Blush',
+                subtitle: 'Add a healthy glow',
+                tools: ['brush', 'blend'],
+                colors: ['#ffb3ba', '#ff8fa3', '#ff6b9d', '#ff4f86'],
+                targetArea: 'cheeks',
+                completionStars: 3
+            },
+            {
+                name: 'Lips',
+                subtitle: 'Perfect pout',
+                tools: ['brush', 'gloss'],
+                colors: ['#ff6b9d', '#e91e63', '#c2185b', '#880e4f'],
+                targetArea: 'lips',
+                completionStars: 3
+            }
+        ];
+
+        // ===========================
+        // CANVAS SETUP
+        // ===========================
+        const canvas = document.getElementById('makeup-canvas');
+        const ctx = canvas.getContext('2d');
+        let animationId;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            drawBackground();
+            drawFace();
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // ===========================
+        // DRAWING FUNCTIONS
+        // ===========================
+        function drawBackground() {
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, '#667eea');
+            gradient.addColorStop(1, '#764ba2');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Ambient particles
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+            for (let i = 0; i < 50; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const size = Math.random() * 3;
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function drawFace() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const faceWidth = 300;
+            const faceHeight = 380;
+
+            // Face shape
+            ctx.fillStyle = '#f5d5c8';
+            ctx.beginPath();
+            ctx.ellipse(centerX, centerY, faceWidth / 2, faceHeight / 2, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Add subtle gradient
+            const gradient = ctx.createRadialGradient(centerX, centerY - 50, 50, centerX, centerY, faceWidth / 2);
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0.1)');
+            ctx.fillStyle = gradient;
+            ctx.fill();
+
+            // Eyes
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.arc(centerX - 60, centerY - 30, 8, 0, Math.PI * 2);
+            ctx.arc(centerX + 60, centerY - 30, 8, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Eyebrows
+            ctx.strokeStyle = '#5d4037';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+
+            ctx.beginPath();
+            ctx.moveTo(centerX - 90, centerY - 60);
+            ctx.quadraticCurveTo(centerX - 60, centerY - 70, centerX - 30, centerY - 60);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(centerX + 30, centerY - 60);
+            ctx.quadraticCurveTo(centerX + 60, centerY - 70, centerX + 90, centerY - 60);
+            ctx.stroke();
+
+            // Nose (simple)
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY - 10);
+            ctx.lineTo(centerX, centerY + 30);
+            ctx.stroke();
+
+            // Lips
+            ctx.fillStyle = '#ff8fa3';
+            ctx.beginPath();
+            ctx.ellipse(centerX, centerY + 80, 50, 20, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Lip shine
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.beginPath();
+            ctx.ellipse(centerX, centerY + 75, 30, 8, 0, 0, Math.PI);
+            ctx.fill();
+        }
+
+        // ===========================
+        // GAME INITIALIZATION
+        // ===========================
+        function startGame() {
+            document.getElementById('scene-overlay').classList.add('hidden');
+            loadScene(0);
+            // Play ambient music (if available)
+            // document.getElementById('ambient-music').play();
+        }
+
+        function loadScene(sceneIndex) {
+            if (sceneIndex >= scenes.length) {
+                showFinalCompletion();
+                return;
+            }
+
+            gameState.currentScene = sceneIndex;
+            const scene = scenes[sceneIndex];
+
+            // Update HUD
+            document.getElementById('current-step').textContent = `Step ${sceneIndex + 1}`;
+            document.getElementById('total-steps').textContent = scenes.length;
+
+            // Show scene title briefly
+            showSceneTransition(scene);
+
+            // Load tools
+            loadTools(scene.tools);
+
+            // Load colors
+            loadColors(scene.colors);
+
+            // Reset drawing state
+            gameState.isDrawing = false;
+
+            // Redraw
+            drawBackground();
+            drawFace();
+        }
+
+        function showSceneTransition(scene) {
+            const overlay = document.getElementById('scene-overlay');
+            overlay.classList.remove('hidden');
+            overlay.querySelector('.scene-title').textContent = scene.name;
+            overlay.querySelector('.scene-subtitle').textContent = scene.subtitle;
+            overlay.querySelector('.start-btn').textContent = 'Start';
+            overlay.querySelector('.start-btn').onclick = () => {
+                overlay.classList.add('hidden');
+                createParticleBurst(canvas.width / 2, canvas.height / 2);
+            };
+        }
+
+        // ===========================
+        // TOOLS & COLORS
+        // ===========================
+        function loadTools(tools) {
+            const panel = document.getElementById('tools-panel');
+            panel.innerHTML = '';
+
+            const toolIcons = {
+                brush: '🖌️',
+                sponge: '🧽',
+                blend: '✨',
+                pencil: '✏️',
+                liquid: '💧',
+                shimmer: '💫',
+                gloss: '💎'
+            };
+
+            tools.forEach((tool, index) => {
+                const toolDiv = document.createElement('div');
+                toolDiv.className = 'tool-item' + (index === 0 ? ' active' : '');
+                toolDiv.innerHTML = `
+                    <div class="tool-icon">${toolIcons[tool] || '🎨'}</div>
+                    <div>${tool}</div>
+                `;
+                toolDiv.onclick = () => selectTool(tool, toolDiv);
+                panel.appendChild(toolDiv);
+            });
+
+            gameState.currentTool = tools[0];
+        }
+
+        function selectTool(tool, element) {
+            gameState.currentTool = tool;
+            document.querySelectorAll('.tool-item').forEach(t => t.classList.remove('active'));
+            element.classList.add('active');
+            playSound('click');
+        }
+
+        function loadColors(colors) {
+            const palette = document.getElementById('color-palette');
+            palette.innerHTML = '';
+
+            colors.forEach((color, index) => {
+                const swatch = document.createElement('div');
+                swatch.className = 'color-swatch' + (index === 0 ? ' active' : '');
+                swatch.style.background = color;
+                swatch.onclick = () => selectColor(color, swatch);
+                palette.appendChild(swatch);
+            });
+
+            gameState.currentColor = colors[0];
+        }
+
+        function selectColor(color, element) {
+            gameState.currentColor = color;
+            document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+            element.classList.add('active');
+            playSound('click');
+        }
+
+        // ===========================
+        // DRAWING INTERACTION
+        // ===========================
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseleave', stopDrawing);
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            gameState.mousePos = { x: touch.clientX, y: touch.clientY };
+            startDrawing();
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            gameState.mousePos = { x: touch.clientX, y: touch.clientY };
+            draw(e);
+        });
+
+        canvas.addEventListener('touchend', stopDrawing);
+
+        function startDrawing(e) {
+            gameState.isDrawing = true;
+            if (e) {
+                gameState.mousePos = { x: e.clientX, y: e.clientY };
+            }
+            playSound('brush');
+        }
+
+        function draw(e) {
+            if (!gameState.isDrawing) {
+                if (e) updateCursor(e);
+                return;
+            }
+
+            if (e) {
+                gameState.mousePos = { x: e.clientX, y: e.clientY };
+                updateCursor(e);
+            }
+
+            const intensity = gameState.intensity / 100;
+            const brushSize = 30 * (gameState.intensity / 100 + 0.5);
+
+            // Draw with current tool
+            ctx.globalCompositeOperation = 'source-over';
+
+            if (gameState.currentTool === 'blend') {
+                ctx.globalCompositeOperation = 'multiply';
+                ctx.globalAlpha = 0.1;
+            } else if (gameState.currentTool === 'shimmer') {
+                ctx.globalAlpha = 0.3;
+            } else {
+                ctx.globalAlpha = intensity * 0.5;
+            }
+
+            const gradient = ctx.createRadialGradient(
+                gameState.mousePos.x, gameState.mousePos.y, 0,
+                gameState.mousePos.x, gameState.mousePos.y, brushSize
+            );
+            gradient.addColorStop(0, gameState.currentColor);
+            gradient.addColorStop(1, 'transparent');
+
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(gameState.mousePos.x, gameState.mousePos.y, brushSize, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.globalAlpha = 1;
+
+            // Create particles occasionally
+            if (Math.random() > 0.7) {
+                createParticle(gameState.mousePos.x, gameState.mousePos.y);
+            }
+        }
+
+        function stopDrawing() {
+            gameState.isDrawing = false;
+        }
+
+        function updateCursor(e) {
+            const cursor = document.getElementById('custom-cursor');
+            cursor.style.display = 'block';
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+            cursor.style.borderColor = gameState.currentColor;
+
+            if (gameState.isDrawing) {
+                cursor.classList.add('active');
+            } else {
+                cursor.classList.remove('active');
+            }
+        }
+
+        canvas.addEventListener('mouseleave', () => {
+            document.getElementById('custom-cursor').style.display = 'none';
+        });
+
+        // ===========================
+        // INTENSITY SLIDER
+        // ===========================
+        document.getElementById('intensity-slider').addEventListener('input', (e) => {
+            gameState.intensity = parseInt(e.target.value);
+        });
+
+        // ===========================
+        // ACTIONS
+        // ===========================
+        function undoLast() {
+            // Simple implementation: redraw base
+            drawBackground();
+            drawFace();
+            playSound('click');
+        }
+
+        function clearAll() {
+            drawBackground();
+            drawFace();
+            playSound('click');
+        }
+
+        function completeStep() {
+            const scene = scenes[gameState.currentScene];
+            gameState.totalStars += scene.completionStars;
+            document.getElementById('star-total').textContent = gameState.totalStars;
+
+            // Show completion modal
+            const modal = document.getElementById('completion-modal');
+            modal.classList.add('show');
+
+            createParticleBurst(canvas.width / 2, canvas.height / 2, 50);
+            playSound('complete');
+        }
+
+        function nextScene() {
+            document.getElementById('completion-modal').classList.remove('show');
+
+            // Transition effect
+            const transition = document.createElement('div');
+            transition.className = 'scene-transition';
+            document.getElementById('game-container').appendChild(transition);
+
+            setTimeout(() => {
+                loadScene(gameState.currentScene + 1);
+                transition.remove();
+            }, 800);
+        }
+
+        function showFinalCompletion() {
+            const overlay = document.getElementById('scene-overlay');
+            overlay.classList.remove('hidden');
+            overlay.querySelector('.scene-title').textContent = '🎉 Amazing! 🎉';
+            overlay.querySelector('.scene-subtitle').textContent = `You earned ${gameState.totalStars} stars!`;
+            overlay.querySelector('.start-btn').textContent = 'Play Again';
+            overlay.querySelector('.start-btn').onclick = () => {
+                gameState.currentScene = 0;
+                gameState.totalStars = 0;
+                document.getElementById('star-total').textContent = 0;
+                startGame();
+            };
+        }
+
+        // ===========================
+        // PARTICLES
+        // ===========================
+        function createParticle(x, y) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = x + 'px';
+            particle.style.top = y + 'px';
+            document.getElementById('particles').appendChild(particle);
+
+            setTimeout(() => particle.remove(), 2000);
+        }
+
+        function createParticleBurst(x, y, count = 20) {
+            for (let i = 0; i < count; i++) {
+                setTimeout(() => {
+                    const offsetX = (Math.random() - 0.5) * 100;
+                    const offsetY = (Math.random() - 0.5) * 100;
+                    createParticle(x + offsetX, y + offsetY);
+                }, i * 50);
+            }
+        }
+
+        // ===========================
+        // SOUND (Placeholder)
+        // ===========================
+        function playSound(type) {
+            // In production, load actual sound files
+            // document.getElementById(type + '-sound').play();
+            console.log('Playing sound:', type);
+        }
+
+        // ===========================
+        // INITIALIZE
+        // ===========================
+        window.addEventListener('load', () => {
+            console.log('🎮 Makeup Magic Game Loaded!');
+            console.log('🎨 Click "Start Experience" to begin');
+        });
+    </script>
+</body>
+</html>
