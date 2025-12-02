@@ -1029,20 +1029,80 @@
             ctx.ellipse(centerX, centerY, faceWidth / 2, faceHeight / 2, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            // Skin texture gradient
-            const skinGradient = ctx.createRadialGradient(centerX, centerY - 80, 50, centerX, centerY, faceWidth / 2);
-            skinGradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
-            skinGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.1)');
-            skinGradient.addColorStop(1, 'rgba(200, 150, 120, 0.2)');
-            ctx.fillStyle = skinGradient;
+            // Enhanced 3D skin structure with multiple gradient layers
+
+            // Layer 1: Overall lighting from top-left (main highlight)
+            const mainLightGradient = ctx.createRadialGradient(
+                centerX - 50, centerY - 100, 50,
+                centerX, centerY, faceWidth / 2
+            );
+            mainLightGradient.addColorStop(0, 'rgba(255, 245, 235, 0.5)'); // Highlight
+            mainLightGradient.addColorStop(0.4, 'rgba(255, 245, 235, 0.2)');
+            mainLightGradient.addColorStop(0.7, 'rgba(0, 0, 0, 0)');
+            mainLightGradient.addColorStop(1, 'rgba(200, 150, 120, 0.25)'); // Shadow on edges
+
+            ctx.fillStyle = mainLightGradient;
+            ctx.beginPath();
+            ctx.ellipse(centerX, centerY, faceWidth / 2, faceHeight / 2, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            // Subtle cheek contours (natural shadow)
-            ctx.fillStyle = 'rgba(210, 170, 150, 0.3)';
+            // Layer 2: Forehead highlight (3D roundness)
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
             ctx.beginPath();
-            ctx.ellipse(centerX - 80, centerY + 20, 40, 60, -0.3, 0, Math.PI * 2);
-            ctx.ellipse(centerX + 80, centerY + 20, 40, 60, 0.3, 0, Math.PI * 2);
+            ctx.ellipse(centerX, centerY - 80, 60, 40, 0, 0, Math.PI * 2);
             ctx.fill();
+
+            // Layer 3: Nose bridge highlight
+            const noseGradient = ctx.createLinearGradient(centerX - 10, centerY - 30, centerX + 10, centerY - 30);
+            noseGradient.addColorStop(0, 'transparent');
+            noseGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.25)');
+            noseGradient.addColorStop(1, 'transparent');
+
+            ctx.fillStyle = noseGradient;
+            ctx.fillRect(centerX - 10, centerY - 30, 20, 70);
+
+            // Layer 4: Cheekbone structure (3D depth)
+            // Left cheekbone
+            const leftCheekGradient = ctx.createRadialGradient(
+                centerX - 70, centerY - 10, 10,
+                centerX - 70, centerY - 10, 50
+            );
+            leftCheekGradient.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
+            leftCheekGradient.addColorStop(1, 'transparent');
+
+            ctx.fillStyle = leftCheekGradient;
+            ctx.beginPath();
+            ctx.ellipse(centerX - 70, centerY - 10, 50, 40, -0.3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Right cheekbone
+            const rightCheekGradient = ctx.createRadialGradient(
+                centerX + 70, centerY - 10, 10,
+                centerX + 70, centerY - 10, 50
+            );
+            rightCheekGradient.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
+            rightCheekGradient.addColorStop(1, 'transparent');
+
+            ctx.fillStyle = rightCheekGradient;
+            ctx.beginPath();
+            ctx.ellipse(centerX + 70, centerY - 10, 50, 40, 0.3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Layer 5: Contour shadows (under cheekbones)
+            ctx.globalCompositeOperation = 'multiply';
+            ctx.fillStyle = 'rgba(210, 170, 150, 0.4)';
+            ctx.beginPath();
+            ctx.ellipse(centerX - 80, centerY + 25, 35, 55, -0.3, 0, Math.PI * 2);
+            ctx.ellipse(centerX + 80, centerY + 25, 35, 55, 0.3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Layer 6: Jawline shadow
+            ctx.fillStyle = 'rgba(200, 160, 140, 0.2)';
+            ctx.beginPath();
+            ctx.ellipse(centerX, centerY + 150, faceWidth / 2.5, 50, 0, 0, Math.PI);
+            ctx.fill();
+
+            ctx.globalCompositeOperation = 'source-over';
 
             // Eyes (more detailed)
             // Eye whites
@@ -1447,38 +1507,152 @@
 
             const intensity = gameState.intensity / 100;
             const brushSize = brushSizes[gameState.brushSize];
+            const x = gameState.mousePos.x;
+            const y = gameState.mousePos.y;
 
-            // Draw with current tool
-            ctx.globalCompositeOperation = 'source-over';
+            // Get face center for 3D lighting calculations
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
 
+            // Calculate distance from center for depth effect
+            const dx = x - centerX;
+            const dy = y - centerY;
+            const distFromCenter = Math.sqrt(dx * dx + dy * dy);
+            const maxDist = Math.sqrt(centerX * centerX + centerY * centerY);
+            const depthFactor = 1 - (distFromCenter / maxDist) * 0.3; // Edges are slightly darker
+
+            // Apply 3D makeup with layered approach
             if (gameState.currentTool === 'blend') {
+                // Blend tool - smooth transitions
                 ctx.globalCompositeOperation = 'multiply';
                 ctx.globalAlpha = 0.1;
+
+                const blendGradient = ctx.createRadialGradient(x, y, 0, x, y, brushSize * 1.5);
+                blendGradient.addColorStop(0, gameState.currentColor);
+                blendGradient.addColorStop(1, 'transparent');
+
+                ctx.fillStyle = blendGradient;
+                ctx.beginPath();
+                ctx.arc(x, y, brushSize * 1.5, 0, Math.PI * 2);
+                ctx.fill();
+
                 sounds.blendWhoosh();
-            } else if (gameState.currentTool === 'shimmer') {
-                ctx.globalAlpha = 0.3;
+            } else if (gameState.currentTool === 'shimmer' || gameState.currentTool === 'gloss') {
+                // Shimmer/Gloss - overlay with highlight
+
+                // Base shimmer color
+                ctx.globalCompositeOperation = 'overlay';
+                ctx.globalAlpha = intensity * 0.4;
+
+                const shimmerGradient = ctx.createRadialGradient(x, y, 0, x, y, brushSize);
+                shimmerGradient.addColorStop(0, gameState.currentColor);
+                shimmerGradient.addColorStop(0.6, gameState.currentColor);
+                shimmerGradient.addColorStop(1, 'transparent');
+
+                ctx.fillStyle = shimmerGradient;
+                ctx.beginPath();
+                ctx.arc(x, y, brushSize, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Add highlight for 3D shine effect
+                ctx.globalCompositeOperation = 'lighter';
+                ctx.globalAlpha = intensity * 0.3;
+
+                const highlightGradient = ctx.createRadialGradient(
+                    x - brushSize * 0.3, y - brushSize * 0.3, 0,
+                    x, y, brushSize * 0.6
+                );
+                highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+                highlightGradient.addColorStop(1, 'transparent');
+
+                ctx.fillStyle = highlightGradient;
+                ctx.beginPath();
+                ctx.arc(x - brushSize * 0.3, y - brushSize * 0.3, brushSize * 0.6, 0, Math.PI * 2);
+                ctx.fill();
+
             } else {
-                ctx.globalAlpha = intensity * 0.6;
+                // Regular makeup application with 3D depth
+
+                // Layer 1: Shadow base for depth (darker, slightly offset)
+                ctx.globalCompositeOperation = 'multiply';
+                ctx.globalAlpha = intensity * 0.15 * depthFactor;
+
+                const shadowColor = darkenColor(gameState.currentColor, 0.3);
+                const shadowGradient = ctx.createRadialGradient(
+                    x + brushSize * 0.15, y + brushSize * 0.15, 0,
+                    x + brushSize * 0.15, y + brushSize * 0.15, brushSize * 0.8
+                );
+                shadowGradient.addColorStop(0, shadowColor);
+                shadowGradient.addColorStop(1, 'transparent');
+
+                ctx.fillStyle = shadowGradient;
+                ctx.beginPath();
+                ctx.arc(x + brushSize * 0.15, y + brushSize * 0.15, brushSize * 0.8, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Layer 2: Main color with multiply blend (respects face structure)
+                ctx.globalCompositeOperation = 'multiply';
+                ctx.globalAlpha = intensity * 0.4 * depthFactor;
+
+                const mainGradient = ctx.createRadialGradient(x, y, 0, x, y, brushSize);
+                mainGradient.addColorStop(0, gameState.currentColor);
+                mainGradient.addColorStop(0.7, gameState.currentColor);
+                mainGradient.addColorStop(1, 'transparent');
+
+                ctx.fillStyle = mainGradient;
+                ctx.beginPath();
+                ctx.arc(x, y, brushSize, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Layer 3: Overlay for vibrancy
+                ctx.globalCompositeOperation = 'overlay';
+                ctx.globalAlpha = intensity * 0.2;
+
+                ctx.fillStyle = mainGradient;
+                ctx.beginPath();
+                ctx.arc(x, y, brushSize, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Layer 4: Subtle highlight for 3D effect
+                ctx.globalCompositeOperation = 'screen';
+                ctx.globalAlpha = intensity * 0.1;
+
+                const highlightGradient = ctx.createRadialGradient(
+                    x - brushSize * 0.25, y - brushSize * 0.25, 0,
+                    x, y, brushSize * 0.5
+                );
+                highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.6)');
+                highlightGradient.addColorStop(1, 'transparent');
+
+                ctx.fillStyle = highlightGradient;
+                ctx.beginPath();
+                ctx.arc(x - brushSize * 0.25, y - brushSize * 0.25, brushSize * 0.5, 0, Math.PI * 2);
+                ctx.fill();
             }
 
-            const gradient = ctx.createRadialGradient(
-                gameState.mousePos.x, gameState.mousePos.y, 0,
-                gameState.mousePos.x, gameState.mousePos.y, brushSize
-            );
-            gradient.addColorStop(0, gameState.currentColor);
-            gradient.addColorStop(1, 'transparent');
-
-            ctx.fillStyle = gradient;
-            ctx.beginPath();
-            ctx.arc(gameState.mousePos.x, gameState.mousePos.y, brushSize, 0, Math.PI * 2);
-            ctx.fill();
-
             ctx.globalAlpha = 1;
+            ctx.globalCompositeOperation = 'source-over';
 
             // Create particles occasionally
             if (Math.random() > 0.8) {
-                createParticle(gameState.mousePos.x, gameState.mousePos.y);
+                createParticle(x, y);
             }
+        }
+
+        // Helper function to darken colors for shadows
+        function darkenColor(color, amount) {
+            // Convert hex to RGB
+            const hex = color.replace('#', '');
+            const r = parseInt(hex.substr(0, 2), 16);
+            const g = parseInt(hex.substr(2, 2), 16);
+            const b = parseInt(hex.substr(4, 2), 16);
+
+            // Darken
+            const newR = Math.max(0, Math.floor(r * (1 - amount)));
+            const newG = Math.max(0, Math.floor(g * (1 - amount)));
+            const newB = Math.max(0, Math.floor(b * (1 - amount)));
+
+            return `rgb(${newR}, ${newG}, ${newB})`;
         }
 
         function stopDrawing() {
