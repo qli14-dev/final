@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Makeup App UI Mockups - Interactive Mid-Fidelity</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            padding: 40px 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #333;
+            font-size: 32px;
+        }
+
+        .concepts-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+            margin-bottom: 60px;
+        }
+
+        .concept-section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .concept-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #555;
+        }
+
+        .screens-row {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+        }
+
+        .mobile-screen {
+            width: 280px;
+            height: 560px;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .screen-label {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            margin-bottom: 16px;
+        }
+
+        .back-arrow {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #666;
+            font-size: 20px;
+        }
+
+        .screen-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            color: #999;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        /* Card Components */
+        .card {
+            background: #fafafa;
+            border: 2px solid #e5e5e5;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .card:hover {
+            border-color: #ffb3c1;
+            transform: scale(1.02);
+        }
+
+        .card.selected {
+            border-color: #ff8fa3;
+            background: #fff5f7;
+        }
+
+        .face-thumbnail {
+            width: 48px;
+            height: 48px;
+            background: #e8e8e8;
+            border-radius: 50%;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .face-thumbnail::before {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #bbb;
+            border-radius: 50%;
+            top: 16px;
+            left: 12px;
+        }
+
+        .face-thumbnail::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #bbb;
+            border-radius: 50%;
+            top: 16px;
+            right: 12px;
+        }
+
+        .card-content {
+            flex: 1;
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .card-meta {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .stars {
+            color: #ffb347;
+            font-size: 12px;
+        }
+
+        /* Button Components */
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background: #ff8fa3;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: #ff6b85;
+            transform: scale(1.02);
+        }
+
+        .btn-outline {
+            padding: 12px 24px;
+            background: transparent;
+            color: #666;
+            border: 2px solid #ddd;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-outline:hover {
+            border-color: #ff8fa3;
+            color: #ff8fa3;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        /* AR Camera View */
+        .ar-camera {
+            width: 100%;
+            height: 280px;
+            background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
+            border-radius: 16px;
+            margin: 16px 0;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ar-face {
+            width: 140px;
+            height: 180px;
+            background: #e8e8e8;
+            border-radius: 50% 50% 45% 45%;
+            position: relative;
+        }
+
+        .ar-face::before {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #ccc;
+            border-radius: 50%;
+            top: 60px;
+            left: 40px;
+        }
+
+        .ar-face::after {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #ccc;
+            border-radius: 50%;
+            top: 60px;
+            right: 40px;
+        }
+
+        .ar-highlight {
+            position: absolute;
+            border: 3px solid #ff8fa3;
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(255, 143, 163, 0.5);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .ar-overlay-text {
+            position: absolute;
+            bottom: -40px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 13px;
+            color: #666;
+            padding: 0 20px;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            margin: 16px 0;
+        }
+
+        .progress-bar {
+            display: flex;
+            gap: 4px;
+            height: 4px;
+        }
+
+        .progress-segment {
+            flex: 1;
+            background: #e5e5e5;
+            border-radius: 2px;
+        }
+
+        .progress-segment.active {
+            background: #ff8fa3;
+        }
+
+        .progress-label {
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+            margin-top: 8px;
+        }
+
+        /* Mood Cards Grid */
+        .mood-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .mood-card {
+            background: #fafafa;
+            border: 2px solid #e5e5e5;
+            border-radius: 12px;
+            padding: 24px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mood-card:hover {
+            border-color: #ffb3c1;
+        }
+
+        .mood-card.selected {
+            border-color: #ff8fa3;
+            background: #fff5f7;
+        }
+
+        .mood-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .mood-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        /* Carousel */
+        .carousel {
+            margin: 20px 0;
+        }
+
+        .carousel-item {
+            background: #fafafa;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .carousel-preview {
+            width: 100%;
+            height: 140px;
+            background: linear-gradient(135deg, #f5f5f5 0%, #e5e5e5 100%);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .color-swatches {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            justify-content: center;
+        }
+
+        .swatch {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid #ddd;
+            cursor: pointer;
+        }
+
+        .swatch.pink { background: #ffb3ba; }
+        .swatch.peach { background: #ffdfba; }
+        .swatch.lavender { background: #e0bbe4; }
+
+        .swatch.selected {
+            border-color: #ff8fa3;
+            box-shadow: 0 0 8px rgba(255, 143, 163, 0.5);
+        }
+
+        .look-name {
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        /* Color Selector Vertical */
+        .color-selector-vertical {
+            position: absolute;
+            right: 24px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .color-option {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 3px solid #ddd;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+
+        .color-option.selected {
+            border-color: #ff8fa3;
+            box-shadow: 0 0 12px rgba(255, 143, 163, 0.6);
+        }
+
+        /* Issue Cards */
+        .issue-list {
+            margin: 16px 0;
+        }
+
+        .issue-card {
+            background: #fff5f7;
+            border-left: 4px solid #ff6b85;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #333;
+        }
+
+        /* Slider */
+        .slider-container {
+            margin: 24px 0;
+        }
+
+        .slider-label {
+            text-align: center;
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 12px;
+        }
+
+        .slider-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .slider-text {
+            font-size: 11px;
+            color: #999;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: #e5e5e5;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ff8fa3;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ff8fa3;
+            cursor: pointer;
+            border: none;
+        }
+
+        /* Capture Button */
+        .capture-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 24px;
+        }
+
+        .capture-button {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: white;
+            border: 6px solid #ff8fa3;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .capture-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 52px;
+            height: 52px;
+            background: #ff8fa3;
+            border-radius: 50%;
+        }
+
+        .capture-button:hover {
+            transform: scale(1.05);
+        }
+
+        .capture-label {
+            margin-top: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .hint-text {
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+            margin-top: 16px;
+        }
+
+        /* Before/After Overlay */
+        .before-after {
+            text-align: center;
+            margin: 24px 0;
+        }
+
+        .before-after-image {
+            width: 180px;
+            height: 180px;
+            background: linear-gradient(135deg, #f5f5f5 0%, #e5e5e5 100%);
+            border-radius: 50%;
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .overlay-hint {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: #999;
+            background: rgba(255,255,255,0.9);
+            padding: 4px 8px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        .completion-text {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .completion-subtitle {
+            font-size: 13px;
+            color: #999;
+            margin-bottom: 24px;
+        }
+
+        /* Analysis Markers */
+        .analysis-photo {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
+            border-radius: 16px;
+            margin: 16px 0;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .marker {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #ff4444;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .marker1 { top: 60px; left: 50px; }
+        .marker2 { top: 80px; right: 70px; }
+        .marker3 { top: 120px; left: 80px; }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .concepts-grid {
+                grid-template-columns: 1fr;
+                gap: 60px;
+            }
+
+            .screens-row {
+                overflow-x: auto;
+                padding-bottom: 20px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .mobile-screen {
+                width: 240px;
+                height: 480px;
+                padding: 12px;
+            }
+
+            .ar-camera {
+                height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Makeup App UI Mockups - Interactive Mid-Fidelity</h1>
+
+        <!-- CONCEPT A: Step-by-step AR Makeup Tutor -->
+        <div class="concept-section">
+            <div class="concept-title">CONCEPT A — Step-by-step AR Makeup Tutor</div>
+            <div class="screens-row">
+
+                <!-- A1: Select Today's Look -->
+                <div class="mobile-screen">
+                    <div class="screen-title">Today's Makeup</div>
+                    <div class="subtitle">Choose a look to start</div>
+
+                    <div class="card selected" onclick="this.parentElement.querySelectorAll('.card').forEach(c => c.classList.remove('selected')); this.classList.add('selected')">
+                        <div class="face-thumbnail"></div>
+                        <div class="card-content">
+                            <div class="card-title">Date Look</div>
+                            <div class="card-meta">7 min <span class="stars">★★☆</span></div>
+                        </div>
+                    </div>
+
+                    <div class="card" onclick="this.parentElement.querySelectorAll('.card').forEach(c => c.classList.remove('selected')); this.classList.add('selected')">
+                        <div class="face-thumbnail"></div>
+                        <div class="card-content">
+                            <div class="card-title">School Look</div>
+                            <div class="card-meta">10 min <span class="stars">★★★</span></div>
+                        </div>
+                    </div>
+
+                    <div class="card" onclick="this.parentElement.querySelectorAll('.card').forEach(c => c.classList.remove('selected')); this.classList.add('selected')">
+                        <div class="face-thumbnail"></div>
+                        <div class="card-content">
+                            <div class="card-title">Interview Look</div>
+                            <div class="card-meta">12 min <span class="stars">★★★</span></div>
+                        </div>
+                    </div>
+
+                    <button class="btn-primary">Start Tutorial</button>
+                    <div class="screen-label">A1</div>
+                </div>
+
+                <!-- A2: AR Step Screen -->
+                <div class="mobile-screen">
+                    <div class="top-bar">
+                        <div class="back-arrow">←</div>
+                        <div style="flex:1; text-align:center; font-size:14px; font-weight:600;">Step 1 of 8</div>
+                        <div style="font-size:11px; color:#999;">Foundation</div>
+                    </div>
+
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress-segment active"></div>
+                            <div class="progress-segment"></div>
+                            <div class="progress-segment"></div>
+                            <div class="progress-segment"></div>
+                            <div class="progress-segment"></div>
+                            <div class="progress-segment"></div>
+                            <div class="progress-segment"></div>
+                            <div class="progress-segment"></div>
+                        </div>
+                    </div>
+
+                    <div class="ar-camera">
+                        <div class="ar-face">
+                            <div class="ar-highlight" style="width:120px; height:100px; top:80px; left:10px;"></div>
+                        </div>
+                    </div>
+
+                    <div class="ar-overlay-text">
+                        Apply foundation evenly on the highlighted area.
+                    </div>
+
+                    <div class="button-group" style="margin-top:auto; position:absolute; bottom:20px; left:16px; right:16px;">
+                        <button class="btn-outline">Back</button>
+                        <button class="btn-primary" style="flex:1;">Next</button>
+                    </div>
+
+                    <div class="screen-label">A2</div>
+                </div>
+
+                <!-- A3: Final Result -->
+                <div class="mobile-screen">
+                    <div class="before-after">
+                        <div class="completion-text">Great job!</div>
+                        <div class="completion-subtitle">You completed today's look.</div>
+
+                        <div class="before-after-image">
+                            <div class="ar-face" style="width:120px; height:150px;"></div>
+                            <div class="overlay-hint">Long press to see Before/After</div>
+                        </div>
+                    </div>
+
+                    <div style="position:absolute; bottom:20px; left:16px; right:16px;">
+                        <button class="btn-primary" style="margin-bottom:12px;">Save Look</button>
+                        <button class="btn-outline" style="width:100%; margin-bottom:8px;">Restart</button>
+                        <div style="text-align:center; color:#999; font-size:13px; cursor:pointer; padding:8px;">Exit</div>
+                    </div>
+
+                    <div class="screen-label">A3</div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- CONCEPT B: Mood-Driven Makeup Selector -->
+        <div class="concept-section">
+            <div class="concept-title">CONCEPT B — Mood-Driven Makeup Selector</div>
+            <div class="screens-row">
+
+                <!-- B1: Mood Selection -->
+                <div class="mobile-screen">
+                    <div class="screen-title">How do you feel<br>today?</div>
+                    <div class="subtitle">Pick a mood</div>
+
+                    <div class="mood-grid">
+                        <div class="mood-card selected" onclick="this.parentElement.querySelectorAll('.mood-card').forEach(c => c.classList.remove('selected')); this.classList.add('selected')">
+                            <div class="mood-icon">💕</div>
+                            <div class="mood-label">Cute</div>
+                        </div>
+
+                        <div class="mood-card" onclick="this.parentElement.querySelectorAll('.mood-card').forEach(c => c.classList.remove('selected')); this.classList.add('selected')">
+                            <div class="mood-icon">⚡</div>
+                            <div class="mood-label">Cool</div>
+                        </div>
+
+                        <div class="mood-card" onclick="this.parentElement.querySelectorAll('.mood-card').forEach(c => c.classList.remove('selected')); this.classList.add('selected')">
+                            <div class="mood-icon">🍃</div>
+                            <div class="mood-label">Natural</div>
+                        </div>
+
+                        <div class="mood-card" onclick="this.parentElement.querySelectorAll('.mood-card').forEach(c => c.classList.remove('selected')); this.classList.add('selected')">
+                            <div class="mood-icon">🌙</div>
+                            <div class="mood-label">Night Out</div>
+                        </div>
+                    </div>
+
+                    <button class="btn-primary" style="position:absolute; bottom:20px; left:16px; right:16px;">Continue</button>
+
+                    <div class="screen-label">B1</div>
+                </div>
+
+                <!-- B2: Recommended Looks -->
+                <div class="mobile-screen">
+                    <div class="top-bar">
+                        <div class="back-arrow">←</div>
+                        <div style="flex:1; text-align:center; font-size:16px; font-weight:600;">Recommended for Cute</div>
+                        <div style="width:32px;"></div>
+                    </div>
+
+                    <div class="carousel">
+                        <div class="carousel-item">
+                            <div class="carousel-preview">
+                                <div class="ar-face" style="width:100px; height:130px;"></div>
+                            </div>
+                            <div class="color-swatches">
+                                <div class="swatch pink selected"></div>
+                                <div class="swatch peach"></div>
+                                <div class="swatch lavender"></div>
+                            </div>
+                            <div class="look-name">Soft Peach</div>
+                            <button class="btn-primary">Try in AR</button>
+                        </div>
+
+                        <div style="text-align:center; color:#ccc; font-size:24px; margin:12px 0;">• • •</div>
+                    </div>
+
+                    <div class="screen-label">B2</div>
+                </div>
+
+                <!-- B3: AR Try-On -->
+                <div class="mobile-screen">
+                    <div class="screen-title" style="font-size:18px;">Try in AR</div>
+                    <div class="subtitle">Soft Peach</div>
+
+                    <div class="ar-camera" style="height:320px;">
+                        <div class="ar-face" style="width:140px; height:180px;"></div>
+
+                        <div class="color-selector-vertical">
+                            <div class="color-option selected" style="background:#ffb3ba;" onclick="this.parentElement.querySelectorAll('.color-option').forEach(c => c.classList.remove('selected')); this.classList.add('selected')"></div>
+                            <div class="color-option" style="background:#ffdfba;" onclick="this.parentElement.querySelectorAll('.color-option').forEach(c => c.classList.remove('selected')); this.classList.add('selected')"></div>
+                            <div class="color-option" style="background:#e0bbe4;" onclick="this.parentElement.querySelectorAll('.color-option').forEach(c => c.classList.remove('selected')); this.classList.add('selected')"></div>
+                        </div>
+                    </div>
+
+                    <div class="hint-text">Tap colors to adjust</div>
+
+                    <div class="button-group" style="position:absolute; bottom:20px; left:16px; right:16px;">
+                        <button class="btn-outline">Back</button>
+                        <button class="btn-primary" style="flex:1;">Save Look</button>
+                    </div>
+
+                    <div class="screen-label">B3</div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- CONCEPT C: Fix My Makeup (AI Doctor) -->
+        <div class="concept-section">
+            <div class="concept-title">CONCEPT C — Fix My Makeup (AI Doctor)</div>
+            <div class="screens-row">
+
+                <!-- C1: Capture Face -->
+                <div class="mobile-screen">
+                    <div class="screen-title">Fix My Makeup</div>
+
+                    <div class="ar-camera" style="height:340px; margin-top:40px;">
+                        <div style="width:160px; height:200px; border:3px dashed #ccc; border-radius:50% 50% 45% 45%; display:flex; align-items:center; justify-content:center;">
+                            <div class="ar-face" style="width:140px; height:180px;"></div>
+                        </div>
+                    </div>
+
+                    <div class="hint-text">Make sure your face is centered.</div>
+
+                    <div class="capture-container">
+                        <div class="capture-button"></div>
+                        <div class="capture-label">Capture</div>
+                    </div>
+
+                    <div class="screen-label">C1</div>
+                </div>
+
+                <!-- C2: AI Analysis Report -->
+                <div class="mobile-screen">
+                    <div class="top-bar">
+                        <div class="back-arrow">←</div>
+                        <div style="flex:1; text-align:center; font-size:16px; font-weight:600;">Your Makeup Report</div>
+                        <div style="width:32px;"></div>
+                    </div>
+
+                    <div class="analysis-photo">
+                        <div class="ar-face" style="width:120px; height:150px;"></div>
+                        <div class="marker marker1"></div>
+                        <div class="marker marker2"></div>
+                        <div class="marker marker3"></div>
+                    </div>
+
+                    <div class="issue-list">
+                        <div class="issue-card">Left eyeliner too thick</div>
+                        <div class="issue-card">Blush uneven</div>
+                        <div class="issue-card">Highlight too strong</div>
+                    </div>
+
+                    <button class="btn-primary" style="position:absolute; bottom:20px; left:16px; right:16px;">Fix with AR</button>
+
+                    <div class="screen-label">C2</div>
+                </div>
+
+                <!-- C3: AR Fix Mode -->
+                <div class="mobile-screen">
+                    <div class="top-bar">
+                        <div class="back-arrow">←</div>
+                        <div style="flex:1; text-align:center; font-size:16px; font-weight:600;">Fix Eyeliner</div>
+                        <div style="width:32px;"></div>
+                    </div>
+
+                    <div class="ar-camera" style="height:280px; margin-top:20px;">
+                        <div class="ar-face" style="width:140px; height:180px;">
+                            <div class="ar-highlight" style="width:50px; height:30px; top:55px; left:25px; border-radius:50%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="slider-container">
+                        <div class="slider-label">Adjust intensity</div>
+                        <div class="slider-wrapper">
+                            <div class="slider-text">Less</div>
+                            <input type="range" min="0" max="100" value="50">
+                            <div class="slider-text">More</div>
+                        </div>
+                    </div>
+
+                    <div class="button-group" style="position:absolute; bottom:20px; left:16px; right:16px;">
+                        <button class="btn-outline">Skip</button>
+                        <button class="btn-primary" style="flex:1;">Done</button>
+                    </div>
+
+                    <div class="screen-label">C3</div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Add smooth interactions
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add click feedback to all buttons
+            const buttons = document.querySelectorAll('.btn-primary, .btn-outline, .card, .mood-card');
+            buttons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    this.style.transform = 'scale(0.98)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 100);
+                });
+            });
+
+            // Add long-press simulation for before/after
+            const beforeAfterImage = document.querySelector('.before-after-image');
+            if (beforeAfterImage) {
+                let pressTimer;
+                beforeAfterImage.addEventListener('mousedown', function() {
+                    pressTimer = setTimeout(() => {
+                        this.style.filter = 'grayscale(100%)';
+                        this.querySelector('.overlay-hint').textContent = 'Before';
+                    }, 500);
+                });
+
+                beforeAfterImage.addEventListener('mouseup', function() {
+                    clearTimeout(pressTimer);
+                    this.style.filter = '';
+                    this.querySelector('.overlay-hint').textContent = 'Long press to see Before/After';
+                });
+
+                beforeAfterImage.addEventListener('mouseleave', function() {
+                    clearTimeout(pressTimer);
+                    this.style.filter = '';
+                    this.querySelector('.overlay-hint').textContent = 'Long press to see Before/After';
+                });
+            }
+
+            // Capture button animation
+            const captureButton = document.querySelector('.capture-button');
+            if (captureButton) {
+                captureButton.addEventListener('click', function() {
+                    this.style.transform = 'scale(0.9)';
+                    setTimeout(() => {
+                        this.style.transform = 'scale(1.1)';
+                        setTimeout(() => {
+                            this.style.transform = '';
+                        }, 100);
+                    }, 100);
+                });
+            }
+
+            console.log('🎨 Interactive Makeup UI Mockups loaded successfully!');
+            console.log('✨ All interactions are functional - try clicking cards, buttons, and mood selections!');
+        });
+    </script>
+</body>
+</html>
