@@ -1521,112 +1521,135 @@
             const maxDist = Math.sqrt(centerX * centerX + centerY * centerY);
             const depthFactor = 1 - (distFromCenter / maxDist) * 0.3; // Edges are slightly darker
 
-            // Apply 3D makeup with layered approach
+            // Apply 3D makeup with layered approach - ENHANCED FOR SMOOTHNESS
             if (gameState.currentTool === 'blend') {
-                // Blend tool - smooth transitions
+                // Blend tool - extra smooth transitions with larger radius
                 ctx.globalCompositeOperation = 'multiply';
-                ctx.globalAlpha = 0.1;
+                ctx.globalAlpha = 0.05; // Reduced for smoother blending
 
-                const blendGradient = ctx.createRadialGradient(x, y, 0, x, y, brushSize * 1.5);
+                const blendGradient = ctx.createRadialGradient(x, y, 0, x, y, brushSize * 2.5);
                 blendGradient.addColorStop(0, gameState.currentColor);
+                blendGradient.addColorStop(0.3, gameState.currentColor);
+                blendGradient.addColorStop(0.7, 'rgba(128, 128, 128, 0.3)'); // Smoother mid-transition
                 blendGradient.addColorStop(1, 'transparent');
 
                 ctx.fillStyle = blendGradient;
                 ctx.beginPath();
-                ctx.arc(x, y, brushSize * 1.5, 0, Math.PI * 2);
+                ctx.arc(x, y, brushSize * 2.5, 0, Math.PI * 2);
                 ctx.fill();
 
                 sounds.blendWhoosh();
+            } else if (gameState.currentTool === 'sponge') {
+                // Sponge - very soft, buildable coverage
+                ctx.globalCompositeOperation = 'multiply';
+                ctx.globalAlpha = intensity * 0.15; // Very light
+
+                const spongeGradient = ctx.createRadialGradient(x, y, 0, x, y, brushSize * 1.4);
+                spongeGradient.addColorStop(0, gameState.currentColor);
+                spongeGradient.addColorStop(0.4, gameState.currentColor);
+                spongeGradient.addColorStop(0.7, lightenColor(gameState.currentColor, 0.3));
+                spongeGradient.addColorStop(1, 'transparent');
+
+                ctx.fillStyle = spongeGradient;
+                ctx.beginPath();
+                ctx.arc(x, y, brushSize * 1.4, 0, Math.PI * 2);
+                ctx.fill();
+
             } else if (gameState.currentTool === 'shimmer' || gameState.currentTool === 'gloss') {
                 // Shimmer/Gloss - overlay with highlight
 
-                // Base shimmer color
+                // Base shimmer color - smoother
                 ctx.globalCompositeOperation = 'overlay';
-                ctx.globalAlpha = intensity * 0.4;
+                ctx.globalAlpha = intensity * 0.25; // Reduced for smoothness
 
-                const shimmerGradient = ctx.createRadialGradient(x, y, 0, x, y, brushSize);
+                const shimmerGradient = ctx.createRadialGradient(x, y, 0, x, y, brushSize * 1.2);
                 shimmerGradient.addColorStop(0, gameState.currentColor);
-                shimmerGradient.addColorStop(0.6, gameState.currentColor);
+                shimmerGradient.addColorStop(0.4, gameState.currentColor);
+                shimmerGradient.addColorStop(0.8, lightenColor(gameState.currentColor, 0.2));
                 shimmerGradient.addColorStop(1, 'transparent');
 
                 ctx.fillStyle = shimmerGradient;
                 ctx.beginPath();
-                ctx.arc(x, y, brushSize, 0, Math.PI * 2);
+                ctx.arc(x, y, brushSize * 1.2, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Add highlight for 3D shine effect
+                // Add highlight for 3D shine effect - softer
                 ctx.globalCompositeOperation = 'lighter';
-                ctx.globalAlpha = intensity * 0.3;
+                ctx.globalAlpha = intensity * 0.2;
 
                 const highlightGradient = ctx.createRadialGradient(
                     x - brushSize * 0.3, y - brushSize * 0.3, 0,
-                    x, y, brushSize * 0.6
+                    x, y, brushSize * 0.8
                 );
-                highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+                highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.6)');
+                highlightGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.3)');
                 highlightGradient.addColorStop(1, 'transparent');
 
                 ctx.fillStyle = highlightGradient;
                 ctx.beginPath();
-                ctx.arc(x - brushSize * 0.3, y - brushSize * 0.3, brushSize * 0.6, 0, Math.PI * 2);
+                ctx.arc(x - brushSize * 0.3, y - brushSize * 0.3, brushSize * 0.8, 0, Math.PI * 2);
                 ctx.fill();
 
             } else {
-                // Regular makeup application with 3D depth
+                // Regular makeup application with SMOOTH 3D depth
 
-                // Layer 1: Shadow base for depth (darker, slightly offset)
+                // Layer 1: Shadow base for depth (softer, more gradual)
                 ctx.globalCompositeOperation = 'multiply';
-                ctx.globalAlpha = intensity * 0.15 * depthFactor;
+                ctx.globalAlpha = intensity * 0.08 * depthFactor; // Reduced for smoothness
 
-                const shadowColor = darkenColor(gameState.currentColor, 0.3);
+                const shadowColor = darkenColor(gameState.currentColor, 0.2); // Less dark
                 const shadowGradient = ctx.createRadialGradient(
-                    x + brushSize * 0.15, y + brushSize * 0.15, 0,
-                    x + brushSize * 0.15, y + brushSize * 0.15, brushSize * 0.8
+                    x + brushSize * 0.1, y + brushSize * 0.1, 0,
+                    x + brushSize * 0.1, y + brushSize * 0.1, brushSize * 1.3
                 );
                 shadowGradient.addColorStop(0, shadowColor);
+                shadowGradient.addColorStop(0.5, lightenColor(shadowColor, 0.3));
                 shadowGradient.addColorStop(1, 'transparent');
 
                 ctx.fillStyle = shadowGradient;
                 ctx.beginPath();
-                ctx.arc(x + brushSize * 0.15, y + brushSize * 0.15, brushSize * 0.8, 0, Math.PI * 2);
+                ctx.arc(x + brushSize * 0.1, y + brushSize * 0.1, brushSize * 1.3, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Layer 2: Main color with multiply blend (respects face structure)
+                // Layer 2: Main color with multiply blend (smoother edges)
                 ctx.globalCompositeOperation = 'multiply';
-                ctx.globalAlpha = intensity * 0.4 * depthFactor;
+                ctx.globalAlpha = intensity * 0.25 * depthFactor; // Reduced for buildable coverage
 
-                const mainGradient = ctx.createRadialGradient(x, y, 0, x, y, brushSize);
+                const mainGradient = ctx.createRadialGradient(x, y, 0, x, y, brushSize * 1.3);
                 mainGradient.addColorStop(0, gameState.currentColor);
-                mainGradient.addColorStop(0.7, gameState.currentColor);
+                mainGradient.addColorStop(0.4, gameState.currentColor);
+                mainGradient.addColorStop(0.7, lightenColor(gameState.currentColor, 0.2));
                 mainGradient.addColorStop(1, 'transparent');
 
                 ctx.fillStyle = mainGradient;
                 ctx.beginPath();
-                ctx.arc(x, y, brushSize, 0, Math.PI * 2);
+                ctx.arc(x, y, brushSize * 1.3, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Layer 3: Overlay for vibrancy
+                // Layer 3: Overlay for vibrancy (subtle)
                 ctx.globalCompositeOperation = 'overlay';
-                ctx.globalAlpha = intensity * 0.2;
+                ctx.globalAlpha = intensity * 0.12; // Reduced
 
                 ctx.fillStyle = mainGradient;
                 ctx.beginPath();
-                ctx.arc(x, y, brushSize, 0, Math.PI * 2);
+                ctx.arc(x, y, brushSize * 1.3, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Layer 4: Subtle highlight for 3D effect
+                // Layer 4: Subtle highlight for 3D effect (smoother)
                 ctx.globalCompositeOperation = 'screen';
-                ctx.globalAlpha = intensity * 0.1;
+                ctx.globalAlpha = intensity * 0.06; // Reduced
 
                 const highlightGradient = ctx.createRadialGradient(
-                    x - brushSize * 0.25, y - brushSize * 0.25, 0,
-                    x, y, brushSize * 0.5
+                    x - brushSize * 0.2, y - brushSize * 0.2, 0,
+                    x, y, brushSize * 0.8
                 );
-                highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.6)');
+                highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.5)');
+                highlightGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.2)');
                 highlightGradient.addColorStop(1, 'transparent');
 
                 ctx.fillStyle = highlightGradient;
                 ctx.beginPath();
-                ctx.arc(x - brushSize * 0.25, y - brushSize * 0.25, brushSize * 0.5, 0, Math.PI * 2);
+                ctx.arc(x - brushSize * 0.2, y - brushSize * 0.2, brushSize * 0.8, 0, Math.PI * 2);
                 ctx.fill();
             }
 
@@ -1651,6 +1674,22 @@
             const newR = Math.max(0, Math.floor(r * (1 - amount)));
             const newG = Math.max(0, Math.floor(g * (1 - amount)));
             const newB = Math.max(0, Math.floor(b * (1 - amount)));
+
+            return `rgb(${newR}, ${newG}, ${newB})`;
+        }
+
+        // Helper function to lighten colors for highlights
+        function lightenColor(color, amount) {
+            // Convert hex to RGB
+            const hex = color.replace('#', '');
+            const r = parseInt(hex.substr(0, 2), 16);
+            const g = parseInt(hex.substr(2, 2), 16);
+            const b = parseInt(hex.substr(4, 2), 16);
+
+            // Lighten by moving towards white
+            const newR = Math.min(255, Math.floor(r + (255 - r) * amount));
+            const newG = Math.min(255, Math.floor(g + (255 - g) * amount));
+            const newB = Math.min(255, Math.floor(b + (255 - b) * amount));
 
             return `rgb(${newR}, ${newG}, ${newB})`;
         }
