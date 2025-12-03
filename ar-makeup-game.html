@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR Makeup Tutor - Interactive Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .phone-container {
+            width: 375px;
+            height: 812px;
+            background: #000;
+            border-radius: 40px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+            padding: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .phone-notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 180px;
+            height: 30px;
+            background: #000;
+            border-radius: 0 0 20px 20px;
+            z-index: 1000;
+        }
+
+        .screen-wrapper {
+            width: 100%;
+            height: 100%;
+            border-radius: 32px;
+            overflow: hidden;
+            position: relative;
+            background: #fff;
+        }
+
+        .screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+
+        .screen.active {
+            opacity: 1;
+            transform: translateX(0);
+            z-index: 10;
+        }
+
+        .screen.exit-left {
+            opacity: 0;
+            transform: translateX(-100%);
+        }
+
+        /* Status Bar */
+        .status-bar {
+            height: 44px;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 14px;
+            font-weight: 600;
+            color: #000;
+        }
+
+        .time {
+            flex: 1;
+        }
+
+        .status-icons {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        /* Screen 1 - Look Selection */
+        .screen-1 {
+            background: linear-gradient(180deg, #fff 0%, #fef5f7 100%);
+        }
+
+        .content {
+            padding: 0 24px;
+            height: calc(100% - 44px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            padding: 20px 0;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .header .subtitle {
+            font-size: 17px;
+            color: #8e8e93;
+            font-weight: 400;
+        }
+
+        .game-stats {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            flex: 1;
+            background: #fff;
+            border-radius: 16px;
+            padding: 16px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #ff6b9d;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #8e8e93;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .looks-container {
+            flex: 1;
+            overflow-y: auto;
+            margin: 12px 0;
+        }
+
+        .look-card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            position: relative;
+        }
+
+        .look-card.completed::after {
+            content: '✓';
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 32px;
+            height: 32px;
+            background: #4cd964;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .look-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255,179,193,0.3);
+            border-color: #ffb3c1;
+        }
+
+        .look-card:active {
+            transform: scale(0.98);
+        }
+
+        .face-thumbnail {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            border-radius: 16px;
+            flex-shrink: 0;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .look-info {
+            flex: 1;
+        }
+
+        .look-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+            letter-spacing: -0.3px;
+        }
+
+        .look-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 15px;
+            color: #8e8e93;
+            align-items: center;
+        }
+
+        .primary-button {
+            width: 100%;
+            background: linear-gradient(135deg, #ff8fab 0%, #ff6b9d 100%);
+            color: #ffffff;
+            border: none;
+            border-radius: 16px;
+            padding: 18px;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(255,107,157,0.4);
+            transition: all 0.3s ease;
+        }
+
+        .primary-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(255,107,157,0.5);
+        }
+
+        .primary-button:active {
+            transform: scale(0.98);
+        }
+
+        /* Abstract Face */
+        .abstract-face {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .face-circle {
+            width: 65%;
+            height: 80%;
+            background: linear-gradient(135deg, #ffd4a3 0%, #ffb88c 100%);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .face-feature {
+            position: absolute;
+            background: #6d4c41;
+            border-radius: 50%;
+        }
+
+        .eye-left {
+            width: 10px;
+            height: 10px;
+            top: 38%;
+            left: 32%;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .eye-right {
+            width: 10px;
+            height: 10px;
+            top: 38%;
+            right: 32%;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .nose {
+            width: 5px;
+            height: 14px;
+            border-radius: 3px;
+            top: 50%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .mouth {
+            width: 18px;
+            height: 10px;
+            border-radius: 0 0 18px 18px;
+            top: 63%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #d4877e;
+        }
+
+        /* Screen 2 - Game Play */
+        .screen-2 {
+            background: #000;
+        }
+
+        .game-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 60px 24px 16px;
+            background: rgba(0,0,0,0.9);
+            position: relative;
+            z-index: 100;
+        }
+
+        .back-button {
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .back-button:hover {
+            background: rgba(255,255,255,0.25);
+        }
+
+        .game-info {
+            flex: 1;
+            margin: 0 12px;
+        }
+
+        .step-indicator {
+            font-size: 13px;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 4px;
+        }
+
+        .step-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .score-display {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .score-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #ff6b9d;
+        }
+
+        .timer {
+            font-size: 14px;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .game-canvas {
+            flex: 1;
+            background: #1a1a1a;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .large-face .face-circle {
+            width: 50%;
+            height: 65%;
+        }
+
+        .large-face .eye-left,
+        .large-face .eye-right {
+            width: 14px;
+            height: 14px;
+        }
+
+        .large-face .nose {
+            width: 7px;
+            height: 20px;
+        }
+
+        .large-face .mouth {
+            width: 26px;
+            height: 14px;
+        }
+
+        .target-area {
+            position: absolute;
+            border: 3px dashed rgba(255, 179, 193, 0.8);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            animation: targetPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes targetPulse {
+            0%, 100% {
+                transform: scale(1);
+                border-color: rgba(255, 179, 193, 0.8);
+            }
+            50% {
+                transform: scale(1.05);
+                border-color: rgba(255, 179, 193, 1);
+            }
+        }
+
+        .target-area:hover {
+            background: rgba(255, 179, 193, 0.15);
+        }
+
+        .target-area.hit {
+            animation: targetHit 0.5s ease-out;
+            pointer-events: none;
+        }
+
+        @keyframes targetHit {
+            0% {
+                transform: scale(1);
+                background: rgba(76, 217, 100, 0.5);
+                border-color: #4cd964;
+            }
+            100% {
+                transform: scale(1.2);
+                opacity: 0;
+            }
+        }
+
+        .makeup-layer {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .makeup-layer.applied {
+            opacity: 1;
+        }
+
+        .foundation-left {
+            width: 90px;
+            height: 90px;
+            top: 35%;
+            left: 18%;
+            background: radial-gradient(circle, rgba(255,228,196,0.6) 0%, transparent 70%);
+        }
+
+        .foundation-right {
+            width: 90px;
+            height: 90px;
+            top: 35%;
+            right: 18%;
+            background: radial-gradient(circle, rgba(255,228,196,0.6) 0%, transparent 70%);
+        }
+
+        .foundation-forehead {
+            width: 110px;
+            height: 70px;
+            top: 16%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: radial-gradient(ellipse, rgba(255,228,196,0.6) 0%, transparent 70%);
+        }
+
+        .blush-left {
+            width: 70px;
+            height: 70px;
+            top: 40%;
+            left: 22%;
+            background: radial-gradient(circle, rgba(255,179,193,0.6) 0%, transparent 70%);
+        }
+
+        .blush-right {
+            width: 70px;
+            height: 70px;
+            top: 40%;
+            right: 22%;
+            background: radial-gradient(circle, rgba(255,179,193,0.6) 0%, transparent 70%);
+        }
+
+        .instruction-bar {
+            background: linear-gradient(180deg, #ffffff 0%, #fef5f7 100%);
+            padding: 20px 24px;
+            position: relative;
+            z-index: 50;
+        }
+
+        .instruction-text {
+            font-size: 17px;
+            color: #1a1a1a;
+            line-height: 1.5;
+            margin-bottom: 16px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .combo-display {
+            text-align: center;
+            margin-bottom: 12px;
+            font-size: 20px;
+            font-weight: 700;
+            color: #ff6b9d;
+            min-height: 28px;
+        }
+
+        .progress-bar {
+            display: flex;
+            gap: 6px;
+            height: 5px;
+        }
+
+        .progress-segment {
+            flex: 1;
+            background: #e5e5ea;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+        }
+
+        .progress-segment.active {
+            background: linear-gradient(135deg, #ff8fab 0%, #ff6b9d 100%);
+            box-shadow: 0 2px 6px rgba(255,107,157,0.4);
+        }
+
+        /* Screen 3 - Results */
+        .screen-3 {
+            background: linear-gradient(180deg, #fff 0%, #fef5f7 100%);
+        }
+
+        .results-header {
+            text-align: center;
+            padding: 32px 24px 20px;
+        }
+
+        .result-emoji {
+            font-size: 64px;
+            margin-bottom: 16px;
+            animation: celebrate 0.8s ease-out;
+        }
+
+        @keyframes celebrate {
+            0% {
+                transform: scale(0) rotate(-180deg);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.3) rotate(10deg);
+            }
+            100% {
+                transform: scale(1) rotate(0);
+                opacity: 1;
+            }
+        }
+
+        .result-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+
+        .result-subtitle {
+            font-size: 17px;
+            color: #8e8e93;
+            margin-bottom: 24px;
+        }
+
+        .score-breakdown {
+            background: #fff;
+            border-radius: 20px;
+            padding: 24px;
+            margin: 0 24px 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .score-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .score-item:last-child {
+            border-bottom: none;
+            padding-top: 16px;
+            margin-top: 8px;
+            border-top: 2px solid #ff6b9d;
+        }
+
+        .score-label {
+            font-size: 16px;
+            color: #1a1a1a;
+            font-weight: 500;
+        }
+
+        .score-item:last-child .score-label {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .score-points {
+            font-size: 18px;
+            font-weight: 700;
+            color: #ff6b9d;
+        }
+
+        .score-item:last-child .score-points {
+            font-size: 24px;
+        }
+
+        .achievement-badge {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            border-radius: 16px;
+            padding: 16px;
+            margin: 0 24px 20px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(255,215,0,0.3);
+        }
+
+        .badge-icon {
+            font-size: 40px;
+            margin-bottom: 8px;
+        }
+
+        .badge-text {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+
+        .action-buttons {
+            padding: 0 24px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .save-button, .secondary-button {
+            width: 100%;
+            border: none;
+            border-radius: 16px;
+            padding: 18px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .save-button {
+            background: linear-gradient(135deg, #ff8fab 0%, #ff6b9d 100%);
+            color: #ffffff;
+            box-shadow: 0 8px 20px rgba(255,107,157,0.4);
+        }
+
+        .save-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(255,107,157,0.5);
+        }
+
+        .secondary-button {
+            background: #fff;
+            color: #1a1a1a;
+            border: 2px solid #e5e5ea;
+        }
+
+        .secondary-button:hover {
+            background: #f9f9f9;
+            transform: scale(1.02);
+        }
+
+        /* Floating Score Popup */
+        .score-popup {
+            position: absolute;
+            font-size: 32px;
+            font-weight: 700;
+            color: #4cd964;
+            pointer-events: none;
+            animation: scoreFloat 1s ease-out forwards;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        @keyframes scoreFloat {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        /* Confetti */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #ff6b9d;
+            animation: confettiFall 3s ease-out forwards;
+        }
+
+        @keyframes confettiFall {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(500px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Ripple */
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.6);
+            transform: scale(0);
+            animation: ripple-animation 0.6s ease-out;
+            pointer-events: none;
+        }
+
+        @keyframes ripple-animation {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-container">
+        <div class="phone-notch"></div>
+        <div class="screen-wrapper">
+            <!-- SCREEN 1: Look Selection -->
+            <div class="screen screen-1 active">
+                <div class="status-bar">
+                    <span class="time">9:41</span>
+                    <div class="status-icons">
+                        <span>📶 📡 🔋</span>
+                    </div>
+                </div>
+                <div class="content">
+                    <div class="header">
+                        <h1>Makeup Game</h1>
+                        <p class="subtitle">Master your makeup skills!</p>
+                    </div>
+
+                    <div class="game-stats">
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalScore">0</div>
+                            <div class="stat-label">Total Score</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="bestCombo">0</div>
+                            <div class="stat-label">Best Combo</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="levelsCompleted">0</div>
+                            <div class="stat-label">Completed</div>
+                        </div>
+                    </div>
+
+                    <div class="looks-container">
+                        <div class="look-card" data-level="1" data-look="date">
+                            <div class="face-thumbnail">
+                                <div class="abstract-face">
+                                    <div class="face-circle"></div>
+                                    <div class="face-feature eye-left"></div>
+                                    <div class="face-feature eye-right"></div>
+                                    <div class="face-feature nose"></div>
+                                    <div class="face-feature mouth"></div>
+                                </div>
+                            </div>
+                            <div class="look-info">
+                                <div class="look-title">Level 1: Natural Look</div>
+                                <div class="look-meta">
+                                    <span>⭐ Easy</span>
+                                    <span>3 Steps</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="look-card" data-level="2" data-look="school">
+                            <div class="face-thumbnail">
+                                <div class="abstract-face">
+                                    <div class="face-circle"></div>
+                                    <div class="face-feature eye-left"></div>
+                                    <div class="face-feature eye-right"></div>
+                                    <div class="face-feature nose"></div>
+                                    <div class="face-feature mouth"></div>
+                                </div>
+                            </div>
+                            <div class="look-info">
+                                <div class="look-title">Level 2: Fresh Look</div>
+                                <div class="look-meta">
+                                    <span>⭐⭐ Medium</span>
+                                    <span>5 Steps</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="look-card" data-level="3" data-look="interview">
+                            <div class="face-thumbnail">
+                                <div class="abstract-face">
+                                    <div class="face-circle"></div>
+                                    <div class="face-feature eye-left"></div>
+                                    <div class="face-feature eye-right"></div>
+                                    <div class="face-feature nose"></div>
+                                    <div class="face-feature mouth"></div>
+                                </div>
+                            </div>
+                            <div class="look-info">
+                                <div class="look-title">Level 3: Glam Look</div>
+                                <div class="look-meta">
+                                    <span>⭐⭐⭐ Hard</span>
+                                    <span>8 Steps</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="primary-button" id="startGame">Start Level</button>
+                </div>
+            </div>
+
+            <!-- SCREEN 2: Game Play -->
+            <div class="screen screen-2">
+                <div class="status-bar" style="color: #fff;">
+                    <span class="time">9:41</span>
+                    <div class="status-icons">
+                        <span>📶 📡 🔋</span>
+                    </div>
+                </div>
+                <div class="game-header">
+                    <div class="back-button" id="pauseGame">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                            <rect x="6" y="4" width="4" height="16" />
+                            <rect x="14" y="4" width="4" height="16" />
+                        </svg>
+                    </div>
+                    <div class="game-info">
+                        <div class="step-indicator" id="stepIndicator">Step 1 of 3</div>
+                        <div class="step-name" id="stepName">Foundation</div>
+                    </div>
+                    <div class="score-display">
+                        <div class="score-value" id="currentScore">0</div>
+                        <div class="timer" id="timer">30s</div>
+                    </div>
+                </div>
+
+                <div class="game-canvas" id="gameCanvas">
+                    <div class="abstract-face large-face">
+                        <div class="face-circle"></div>
+                        <div class="face-feature eye-left"></div>
+                        <div class="face-feature eye-right"></div>
+                        <div class="face-feature nose"></div>
+                        <div class="face-feature mouth"></div>
+                    </div>
+                    <!-- Makeup layers will be added dynamically -->
+                    <!-- Target areas will be added dynamically -->
+                </div>
+
+                <div class="instruction-bar">
+                    <div class="combo-display" id="comboDisplay"></div>
+                    <p class="instruction-text" id="instructionText">Tap all highlighted areas to apply makeup!</p>
+                    <div class="progress-bar" id="progressBar">
+                        <!-- Progress segments added dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN 3: Results -->
+            <div class="screen screen-3">
+                <div class="status-bar">
+                    <span class="time">9:41</span>
+                    <div class="status-icons">
+                        <span>📶 📡 🔋</span>
+                    </div>
+                </div>
+                <div class="content">
+                    <div class="results-header">
+                        <div class="result-emoji" id="resultEmoji">🎉</div>
+                        <h1 class="result-title" id="resultTitle">Perfect!</h1>
+                        <p class="result-subtitle" id="resultSubtitle">You're a makeup master!</p>
+                    </div>
+
+                    <div class="score-breakdown">
+                        <div class="score-item">
+                            <span class="score-label">Accuracy</span>
+                            <span class="score-points" id="accuracyScore">0</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="score-label">Speed Bonus</span>
+                            <span class="score-points" id="speedBonus">0</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="score-label">Combo Bonus</span>
+                            <span class="score-points" id="comboBonus">0</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="score-label">Total Score</span>
+                            <span class="score-points" id="finalScore">0</span>
+                        </div>
+                    </div>
+
+                    <div class="achievement-badge" id="achievementBadge" style="display: none;">
+                        <div class="badge-icon" id="badgeIcon">🏆</div>
+                        <div class="badge-text" id="badgeText">New Achievement!</div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="save-button" id="nextLevel">Next Level</button>
+                        <button class="secondary-button" id="replay">Replay Level</button>
+                        <button class="secondary-button" id="backToMenu">Back to Menu</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        const gameState = {
+            currentScreen: 1,
+            selectedLevel: 1,
+            currentStep: 0,
+            score: 0,
+            combo: 0,
+            bestCombo: 0,
+            totalScore: parseInt(localStorage.getItem('totalScore') || '0'),
+            levelsCompleted: parseInt(localStorage.getItem('levelsCompleted') || '0'),
+            timeLeft: 30,
+            timerInterval: null,
+            targetsHit: 0,
+            totalTargets: 0,
+            startTime: 0
+        };
+
+        // Game Levels Configuration
+        const levels = {
+            1: {
+                name: 'Natural Look',
+                steps: [
+                    { name: 'Foundation', targets: ['left', 'right', 'forehead'], time: 30 },
+                    { name: 'Blush', targets: ['left', 'right'], time: 20 },
+                    { name: 'Lips', targets: ['lips'], time: 15 }
+                ]
+            },
+            2: {
+                name: 'Fresh Look',
+                steps: [
+                    { name: 'Foundation', targets: ['left', 'right', 'forehead'], time: 25 },
+                    { name: 'Concealer', targets: ['left', 'right'], time: 20 },
+                    { name: 'Blush', targets: ['left', 'right'], time: 20 },
+                    { name: 'Highlighter', targets: ['forehead'], time: 15 },
+                    { name: 'Lips', targets: ['lips'], time: 15 }
+                ]
+            },
+            3: {
+                name: 'Glam Look',
+                steps: [
+                    { name: 'Primer', targets: ['left', 'right', 'forehead'], time: 20 },
+                    { name: 'Foundation', targets: ['left', 'right', 'forehead'], time: 20 },
+                    { name: 'Concealer', targets: ['left', 'right'], time: 15 },
+                    { name: 'Contour', targets: ['left', 'right'], time: 20 },
+                    { name: 'Blush', targets: ['left', 'right'], time: 15 },
+                    { name: 'Highlighter', targets: ['forehead'], time: 15 },
+                    { name: 'Eye Shadow', targets: ['left', 'right'], time: 20 },
+                    { name: 'Lips', targets: ['lips'], time: 15 }
+                ]
+            }
+        };
+
+        // Target positions
+        const targetPositions = {
+            'left': { top: '35%', left: '18%', width: '90px', height: '90px' },
+            'right': { top: '35%', right: '18%', width: '90px', height: '90px' },
+            'forehead': { top: '16%', left: '50%', transform: 'translateX(-50%)', width: '110px', height: '70px' },
+            'lips': { top: '63%', left: '50%', transform: 'translateX(-50%)', width: '80px', height: '40px' }
+        };
+
+        // Audio Context
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioContext = new AudioContext();
+
+        // Sound Effects
+        function playSound(frequency, duration, type = 'sine') {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.frequency.value = frequency;
+            oscillator.type = type;
+
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration);
+        }
+
+        function playHitSound() {
+            playSound(880, 0.1);
+        }
+
+        function playComboSound(combo) {
+            const baseFreq = 440;
+            playSound(baseFreq + (combo * 50), 0.15);
+        }
+
+        function playSuccessSound() {
+            setTimeout(() => playSound(523.25, 0.15), 0);
+            setTimeout(() => playSound(659.25, 0.15), 100);
+            setTimeout(() => playSound(783.99, 0.2), 200);
+        }
+
+        function playClickSound() {
+            playSound(800, 0.1);
+        }
+
+        // Utility Functions
+        function showScreen(screenNumber) {
+            const currentScreenEl = document.querySelector('.screen-' + gameState.currentScreen);
+            const nextScreenEl = document.querySelector('.screen-' + screenNumber);
+
+            if (currentScreenEl) {
+                currentScreenEl.classList.remove('active');
+                currentScreenEl.classList.add('exit-left');
+            }
+
+            if (nextScreenEl) {
+                nextScreenEl.classList.add('active');
+                nextScreenEl.classList.remove('exit-left');
+            }
+
+            gameState.currentScreen = screenNumber;
+        }
+
+        function updateStats() {
+            document.getElementById('totalScore').textContent = gameState.totalScore;
+            document.getElementById('bestCombo').textContent = gameState.bestCombo;
+            document.getElementById('levelsCompleted').textContent = gameState.levelsCompleted;
+        }
+
+        function saveProgress() {
+            localStorage.setItem('totalScore', gameState.totalScore.toString());
+            localStorage.setItem('levelsCompleted', gameState.levelsCompleted.toString());
+            localStorage.setItem('bestCombo', gameState.bestCombo.toString());
+        }
+
+        function createRipple(e) {
+            const button = e.currentTarget;
+            const rect = button.getBoundingClientRect();
+            const ripple = document.createElement('span');
+            const size = Math.max(rect.width, rect.height);
+            const x = e.clientX - rect.left - size / 2;
+            const y = e.clientY - rect.top - size / 2;
+
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = x + 'px';
+            ripple.style.top = y + 'px';
+            ripple.classList.add('ripple');
+
+            button.appendChild(ripple);
+
+            setTimeout(() => ripple.remove(), 600);
+        }
+
+        function showScorePopup(x, y, points) {
+            const popup = document.createElement('div');
+            popup.className = 'score-popup';
+            popup.textContent = '+' + points;
+            popup.style.left = x + 'px';
+            popup.style.top = y + 'px';
+
+            document.getElementById('gameCanvas').appendChild(popup);
+
+            setTimeout(() => popup.remove(), 1000);
+        }
+
+        function createConfetti() {
+            const colors = ['#ff6b9d', '#ffb3c1', '#ffd700', '#4cd964', '#667eea'];
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                confetti.style.animationDuration = (2 + Math.random()) + 's';
+
+                document.querySelector('.screen-3').appendChild(confetti);
+
+                setTimeout(() => confetti.remove(), 3500);
+            }
+        }
+
+        // Game Logic
+        function startGame() {
+            const level = levels[gameState.selectedLevel];
+            gameState.currentStep = 0;
+            gameState.score = 0;
+            gameState.combo = 0;
+            gameState.startTime = Date.now();
+
+            showScreen(2);
+            loadStep();
+        }
+
+        function loadStep() {
+            const level = levels[gameState.selectedLevel];
+            const step = level.steps[gameState.currentStep];
+
+            // Update UI
+            document.getElementById('stepIndicator').textContent =
+                `Step ${gameState.currentStep + 1} of ${level.steps.length}`;
+            document.getElementById('stepName').textContent = step.name;
+            document.getElementById('currentScore').textContent = gameState.score;
+            document.getElementById('instructionText').textContent =
+                `Tap all ${step.targets.length} highlighted areas quickly!`;
+
+            // Update progress bar
+            const progressBar = document.getElementById('progressBar');
+            progressBar.innerHTML = '';
+            for (let i = 0; i < level.steps.length; i++) {
+                const segment = document.createElement('div');
+                segment.className = 'progress-segment' + (i <= gameState.currentStep ? ' active' : '');
+                progressBar.appendChild(segment);
+            }
+
+            // Clear previous targets and makeup layers
+            const canvas = document.getElementById('gameCanvas');
+            canvas.querySelectorAll('.target-area, .makeup-layer').forEach(el => el.remove());
+
+            // Create targets
+            gameState.targetsHit = 0;
+            gameState.totalTargets = step.targets.length;
+
+            step.targets.forEach(target => {
+                const targetEl = document.createElement('div');
+                targetEl.className = 'target-area';
+                targetEl.dataset.target = target;
+                Object.assign(targetEl.style, targetPositions[target]);
+
+                targetEl.addEventListener('click', handleTargetHit);
+
+                canvas.appendChild(targetEl);
+
+                // Create makeup layer
+                const layerEl = document.createElement('div');
+                layerEl.className = `makeup-layer ${step.name.toLowerCase()}-${target}`;
+                Object.assign(layerEl.style, targetPositions[target]);
+
+                if (target === 'left' || target === 'right') {
+                    layerEl.style.background = 'radial-gradient(circle, rgba(255,179,193,0.6) 0%, transparent 70%)';
+                } else if (target === 'forehead') {
+                    layerEl.style.background = 'radial-gradient(ellipse, rgba(255,228,196,0.6) 0%, transparent 70%)';
+                } else if (target === 'lips') {
+                    layerEl.style.background = 'radial-gradient(ellipse, rgba(255,107,157,0.8) 0%, transparent 70%)';
+                    layerEl.style.borderRadius = '50%';
+                }
+
+                canvas.appendChild(layerEl);
+            });
+
+            // Start timer
+            gameState.timeLeft = step.time;
+            updateTimer();
+            if (gameState.timerInterval) {
+                clearInterval(gameState.timerInterval);
+            }
+            gameState.timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        function updateTimer() {
+            document.getElementById('timer').textContent = gameState.timeLeft + 's';
+
+            if (gameState.timeLeft <= 0) {
+                clearInterval(gameState.timerInterval);
+                endGame(false);
+            } else {
+                gameState.timeLeft--;
+            }
+        }
+
+        function handleTargetHit(e) {
+            const target = e.currentTarget;
+            const rect = target.getBoundingClientRect();
+            const x = rect.left + rect.width / 2;
+            const y = rect.top + rect.height / 2;
+
+            // Mark as hit
+            target.classList.add('hit');
+            gameState.targetsHit++;
+            gameState.combo++;
+
+            // Calculate points
+            const basePoints = 100;
+            const comboBonus = gameState.combo * 10;
+            const points = basePoints + comboBonus;
+
+            gameState.score += points;
+
+            // Update UI
+            document.getElementById('currentScore').textContent = gameState.score;
+            document.getElementById('comboDisplay').textContent =
+                gameState.combo > 1 ? `🔥 ${gameState.combo}x COMBO!` : '';
+
+            // Show feedback
+            showScorePopup(x, y, points);
+            playHitSound();
+            if (gameState.combo > 1) {
+                playComboSound(gameState.combo);
+            }
+
+            // Apply makeup layer
+            const targetName = target.dataset.target;
+            const level = levels[gameState.selectedLevel];
+            const step = level.steps[gameState.currentStep];
+            const layerEl = document.querySelector(`.${step.name.toLowerCase()}-${targetName}`);
+            if (layerEl) {
+                layerEl.classList.add('applied');
+            }
+
+            // Check if step complete
+            if (gameState.targetsHit >= gameState.totalTargets) {
+                clearInterval(gameState.timerInterval);
+                setTimeout(() => {
+                    gameState.currentStep++;
+                    if (gameState.currentStep >= level.steps.length) {
+                        endGame(true);
+                    } else {
+                        loadStep();
+                    }
+                }, 500);
+            }
+        }
+
+        function endGame(completed) {
+            clearInterval(gameState.timerInterval);
+
+            if (!completed) {
+                // Time ran out
+                gameState.combo = 0;
+            }
+
+            // Calculate bonuses
+            const level = levels[gameState.selectedLevel];
+            const timeElapsed = (Date.now() - gameState.startTime) / 1000;
+            const expectedTime = level.steps.reduce((sum, step) => sum + step.time, 0);
+
+            const accuracyScore = gameState.score;
+            const speedBonus = completed ? Math.max(0, Math.floor((expectedTime - timeElapsed) * 10)) : 0;
+            const comboBonus = gameState.combo * 50;
+            const finalScore = accuracyScore + speedBonus + comboBonus;
+
+            // Update best combo
+            if (gameState.combo > gameState.bestCombo) {
+                gameState.bestCombo = gameState.combo;
+            }
+
+            // Update total score and levels
+            if (completed) {
+                gameState.totalScore += finalScore;
+                gameState.levelsCompleted++;
+            }
+
+            saveProgress();
+
+            // Show results
+            document.getElementById('resultEmoji').textContent = completed ? '🎉' : '⏱️';
+            document.getElementById('resultTitle').textContent =
+                completed ? (finalScore > 1000 ? 'Perfect!' : 'Great Job!') : 'Time\'s Up!';
+            document.getElementById('resultSubtitle').textContent =
+                completed ? 'You completed the level!' : 'Try again for a better score!';
+
+            document.getElementById('accuracyScore').textContent = accuracyScore;
+            document.getElementById('speedBonus').textContent = '+' + speedBonus;
+            document.getElementById('comboBonus').textContent = '+' + comboBonus;
+            document.getElementById('finalScore').textContent = finalScore;
+
+            // Show achievement badge
+            const badge = document.getElementById('achievementBadge');
+            if (completed && finalScore > 1000) {
+                badge.style.display = 'block';
+                document.getElementById('badgeIcon').textContent = '🏆';
+                document.getElementById('badgeText').textContent = 'Flawless Performance!';
+            } else if (gameState.combo >= 5) {
+                badge.style.display = 'block';
+                document.getElementById('badgeIcon').textContent = '🔥';
+                document.getElementById('badgeText').textContent = `${gameState.combo}x Combo Master!`;
+            } else {
+                badge.style.display = 'none';
+            }
+
+            playSuccessSound();
+            showScreen(3);
+            createConfetti();
+            updateStats();
+        }
+
+        // Event Listeners
+        document.querySelectorAll('.look-card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                playClickSound();
+                createRipple(e);
+
+                document.querySelectorAll('.look-card').forEach(c => {
+                    c.style.borderColor = 'transparent';
+                });
+
+                this.style.borderColor = '#ffb3c1';
+                gameState.selectedLevel = parseInt(this.dataset.level);
+            });
+        });
+
+        document.getElementById('startGame').addEventListener('click', function(e) {
+            if (!gameState.selectedLevel) {
+                gameState.selectedLevel = 1;
+            }
+            playClickSound();
+            createRipple(e);
+            startGame();
+        });
+
+        document.getElementById('pauseGame').addEventListener('click', function() {
+            playClickSound();
+            clearInterval(gameState.timerInterval);
+            showScreen(1);
+            updateStats();
+        });
+
+        document.getElementById('nextLevel').addEventListener('click', function(e) {
+            playClickSound();
+            createRipple(e);
+
+            if (gameState.selectedLevel < 3) {
+                gameState.selectedLevel++;
+                startGame();
+            } else {
+                showScreen(1);
+                updateStats();
+            }
+        });
+
+        document.getElementById('replay').addEventListener('click', function(e) {
+            playClickSound();
+            createRipple(e);
+            startGame();
+        });
+
+        document.getElementById('backToMenu').addEventListener('click', function(e) {
+            playClickSound();
+            createRipple(e);
+            showScreen(1);
+            updateStats();
+        });
+
+        // Initialize
+        document.addEventListener('click', () => {
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+        }, { once: true });
+
+        updateStats();
+
+        // Mark completed levels
+        const completedCount = gameState.levelsCompleted;
+        document.querySelectorAll('.look-card').forEach((card, index) => {
+            if (index < completedCount) {
+                card.classList.add('completed');
+            }
+        });
+    </script>
+</body>
+</html>
