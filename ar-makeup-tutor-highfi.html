@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR Makeup Tutor - High-Fidelity Interactive Prototype</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .phone-container {
+            width: 375px;
+            height: 812px;
+            background: #000;
+            border-radius: 40px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+            padding: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .phone-notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 180px;
+            height: 30px;
+            background: #000;
+            border-radius: 0 0 20px 20px;
+            z-index: 1000;
+        }
+
+        .screen-wrapper {
+            width: 100%;
+            height: 100%;
+            border-radius: 32px;
+            overflow: hidden;
+            position: relative;
+            background: #fff;
+        }
+
+        .screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+
+        .screen.active {
+            opacity: 1;
+            transform: translateX(0);
+            z-index: 10;
+        }
+
+        .screen.exit-left {
+            opacity: 0;
+            transform: translateX(-100%);
+        }
+
+        /* Status Bar */
+        .status-bar {
+            height: 44px;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 14px;
+            font-weight: 600;
+            color: #000;
+        }
+
+        .time {
+            flex: 1;
+        }
+
+        .status-icons {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .signal-icon, .wifi-icon, .battery-icon {
+            font-size: 16px;
+        }
+
+        /* Screen 1 - Look Selection */
+        .screen-1 {
+            background: linear-gradient(180deg, #fff 0%, #fef5f7 100%);
+        }
+
+        .content {
+            padding: 0 24px;
+            height: calc(100% - 44px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            padding: 20px 0;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .header .subtitle {
+            font-size: 17px;
+            color: #8e8e93;
+            font-weight: 400;
+        }
+
+        .looks-container {
+            flex: 1;
+            overflow-y: auto;
+            margin: 12px 0;
+        }
+
+        .look-card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .look-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255,179,193,0.3);
+            border-color: #ffb3c1;
+        }
+
+        .look-card:active {
+            transform: scale(0.98);
+        }
+
+        .face-thumbnail {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            border-radius: 16px;
+            flex-shrink: 0;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .look-info {
+            flex: 1;
+        }
+
+        .look-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+            letter-spacing: -0.3px;
+        }
+
+        .look-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 15px;
+            color: #8e8e93;
+            align-items: center;
+        }
+
+        .time-badge {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stars {
+            color: #ffb3c1;
+            font-size: 16px;
+        }
+
+        .primary-button {
+            width: 100%;
+            background: linear-gradient(135deg, #ff8fab 0%, #ff6b9d 100%);
+            color: #ffffff;
+            border: none;
+            border-radius: 16px;
+            padding: 18px;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(255,107,157,0.4);
+            transition: all 0.3s ease;
+        }
+
+        .primary-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(255,107,157,0.5);
+        }
+
+        .primary-button:active {
+            transform: scale(0.98);
+        }
+
+        /* Abstract Face Illustrations - Enhanced */
+        .abstract-face {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .face-circle {
+            width: 65%;
+            height: 80%;
+            background: linear-gradient(135deg, #ffd4a3 0%, #ffb88c 100%);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .face-feature {
+            position: absolute;
+            background: #6d4c41;
+            border-radius: 50%;
+        }
+
+        .eye-left {
+            width: 10px;
+            height: 10px;
+            top: 38%;
+            left: 32%;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .eye-right {
+            width: 10px;
+            height: 10px;
+            top: 38%;
+            right: 32%;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .nose {
+            width: 5px;
+            height: 14px;
+            border-radius: 3px;
+            top: 50%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .mouth {
+            width: 18px;
+            height: 10px;
+            border-radius: 0 0 18px 18px;
+            top: 63%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #d4877e;
+        }
+
+        /* Screen 2 - AR Step */
+        .screen-2 {
+            background: #000;
+        }
+
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 60px 24px 16px;
+            background: rgba(0,0,0,0.8);
+            position: relative;
+            z-index: 100;
+        }
+
+        .back-button {
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .back-button:hover {
+            background: rgba(255,255,255,0.25);
+            transform: scale(1.05);
+        }
+
+        .back-button:active {
+            transform: scale(0.95);
+        }
+
+        .back-arrow {
+            width: 20px;
+            height: 20px;
+            color: #fff;
+        }
+
+        .step-info {
+            text-align: center;
+            flex: 1;
+            color: #fff;
+        }
+
+        .step-number {
+            font-size: 13px;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .step-label {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: -0.3px;
+        }
+
+        .spacer {
+            width: 40px;
+        }
+
+        .camera-view {
+            flex: 1;
+            background: #1a1a1a;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .camera-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at center, transparent 40%, rgba(0,0,0,0.3) 100%);
+        }
+
+        .ar-highlight {
+            position: absolute;
+            background: rgba(255, 179, 193, 0.25);
+            border: 3px solid rgba(255, 179, 193, 0.8);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+            box-shadow: 0 0 20px rgba(255, 179, 193, 0.6);
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.05);
+                opacity: 0.8;
+            }
+        }
+
+        .highlight-cheek-left {
+            width: 90px;
+            height: 90px;
+            top: 35%;
+            left: 18%;
+        }
+
+        .highlight-cheek-right {
+            width: 90px;
+            height: 90px;
+            top: 35%;
+            right: 18%;
+        }
+
+        .highlight-forehead {
+            width: 110px;
+            height: 70px;
+            top: 16%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .large-face .face-circle {
+            width: 50%;
+            height: 65%;
+        }
+
+        .large-face .eye-left,
+        .large-face .eye-right {
+            width: 14px;
+            height: 14px;
+        }
+
+        .large-face .nose {
+            width: 7px;
+            height: 20px;
+        }
+
+        .large-face .mouth {
+            width: 26px;
+            height: 14px;
+        }
+
+        .instruction-panel {
+            background: linear-gradient(180deg, #ffffff 0%, #fef5f7 100%);
+            padding: 28px 24px 32px;
+            border-radius: 32px 32px 0 0;
+            position: relative;
+            z-index: 50;
+        }
+
+        .instruction-text {
+            font-size: 17px;
+            color: #1a1a1a;
+            line-height: 1.6;
+            margin-bottom: 24px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .ghost-button {
+            flex: 1;
+            background: #fff;
+            border: 2px solid #e5e5ea;
+            border-radius: 14px;
+            padding: 16px;
+            font-size: 17px;
+            font-weight: 600;
+            color: #1a1a1a;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .ghost-button:hover {
+            background: #f9f9f9;
+            border-color: #d1d1d6;
+            transform: scale(1.02);
+        }
+
+        .ghost-button:active {
+            transform: scale(0.98);
+        }
+
+        .next-button {
+            flex: 1;
+            background: linear-gradient(135deg, #ff8fab 0%, #ff6b9d 100%);
+            border: none;
+            border-radius: 14px;
+            padding: 16px;
+            font-size: 17px;
+            font-weight: 700;
+            color: #ffffff;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(255,107,157,0.4);
+            transition: all 0.3s ease;
+        }
+
+        .next-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(255,107,157,0.5);
+        }
+
+        .next-button:active {
+            transform: scale(0.98);
+        }
+
+        .progress-bar {
+            display: flex;
+            gap: 6px;
+            height: 5px;
+        }
+
+        .progress-segment {
+            flex: 1;
+            background: #e5e5ea;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+        }
+
+        .progress-segment.active {
+            background: linear-gradient(135deg, #ff8fab 0%, #ff6b9d 100%);
+            box-shadow: 0 2px 6px rgba(255,107,157,0.4);
+        }
+
+        /* Screen 3 - Final Result */
+        .screen-3 {
+            background: linear-gradient(180deg, #fff 0%, #fef5f7 100%);
+        }
+
+        .screen-3 .header {
+            text-align: center;
+            padding: 32px 0 20px;
+        }
+
+        .celebration-emoji {
+            font-size: 48px;
+            margin-bottom: 16px;
+            animation: celebrate 0.6s ease-out;
+        }
+
+        @keyframes celebrate {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.2);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .result-preview {
+            width: calc(100% - 48px);
+            height: 380px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 24px;
+            position: relative;
+            margin: 0 24px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 12px 32px rgba(102,126,234,0.3);
+            overflow: hidden;
+        }
+
+        .result-preview::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.1) 100%);
+        }
+
+        .overlay-text {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.75);
+            color: #ffffff;
+            padding: 10px 20px;
+            border-radius: 24px;
+            font-size: 14px;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .makeup-face .face-circle {
+            background: linear-gradient(135deg, #ffe4d4 0%, #ffc4a3 100%);
+        }
+
+        .makeup-face .blush-left,
+        .makeup-face .blush-right {
+            width: 28px;
+            height: 28px;
+            background: radial-gradient(circle, rgba(255,179,193,0.6) 0%, rgba(255,179,193,0.2) 100%);
+            border-radius: 50%;
+            position: absolute;
+            top: 46%;
+        }
+
+        .makeup-face .blush-left {
+            left: 23%;
+        }
+
+        .makeup-face .blush-right {
+            right: 23%;
+        }
+
+        .makeup-face .lips {
+            width: 32px;
+            height: 16px;
+            background: linear-gradient(180deg, #e88b9c 0%, #d4677e 100%);
+            border-radius: 0 0 32px 32px;
+            position: absolute;
+            top: 63%;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .makeup-face .eye-left,
+        .makeup-face .eye-right {
+            background: #4a3428;
+            width: 14px;
+            height: 14px;
+        }
+
+        .action-buttons {
+            padding: 0 24px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .save-button {
+            width: 100%;
+            background: linear-gradient(135deg, #ff8fab 0%, #ff6b9d 100%);
+            border: none;
+            border-radius: 16px;
+            padding: 18px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #ffffff;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(255,107,157,0.4);
+            transition: all 0.3s ease;
+        }
+
+        .save-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(255,107,157,0.5);
+        }
+
+        .save-button:active {
+            transform: scale(0.98);
+        }
+
+        .secondary-button {
+            width: 100%;
+            background: #fff;
+            border: 2px solid #e5e5ea;
+            border-radius: 16px;
+            padding: 16px;
+            font-size: 17px;
+            font-weight: 600;
+            color: #1a1a1a;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .secondary-button:hover {
+            background: #f9f9f9;
+            border-color: #d1d1d6;
+            transform: scale(1.02);
+        }
+
+        .secondary-button:active {
+            transform: scale(0.98);
+        }
+
+        /* Floating particles animation */
+        .particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: rgba(255,179,193,0.6);
+            border-radius: 50%;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) translateX(0);
+                opacity: 0;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+
+        /* Loading indicator */
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .loading.show {
+            opacity: 1;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top-color: #ff6b9d;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Ripple effect */
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.6);
+            transform: scale(0);
+            animation: ripple-animation 0.6s ease-out;
+            pointer-events: none;
+        }
+
+        @keyframes ripple-animation {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-container">
+        <div class="phone-notch"></div>
+        <div class="screen-wrapper">
+            <!-- SCREEN 1: Look Selection -->
+            <div class="screen screen-1 active">
+                <div class="status-bar">
+                    <span class="time">9:41</span>
+                    <div class="status-icons">
+                        <span class="signal-icon">📶</span>
+                        <span class="wifi-icon">📡</span>
+                        <span class="battery-icon">🔋</span>
+                    </div>
+                </div>
+                <div class="content">
+                    <div class="header">
+                        <h1>Today's Makeup</h1>
+                        <p class="subtitle">Choose a look to start</p>
+                    </div>
+
+                    <div class="looks-container">
+                        <div class="look-card" data-look="date">
+                            <div class="face-thumbnail">
+                                <div class="abstract-face">
+                                    <div class="face-circle"></div>
+                                    <div class="face-feature eye-left"></div>
+                                    <div class="face-feature eye-right"></div>
+                                    <div class="face-feature nose"></div>
+                                    <div class="face-feature mouth"></div>
+                                </div>
+                            </div>
+                            <div class="look-info">
+                                <div class="look-title">Date Look</div>
+                                <div class="look-meta">
+                                    <span class="time-badge">⏱️ 7 min</span>
+                                    <span class="stars">★★☆</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="look-card" data-look="school">
+                            <div class="face-thumbnail">
+                                <div class="abstract-face">
+                                    <div class="face-circle"></div>
+                                    <div class="face-feature eye-left"></div>
+                                    <div class="face-feature eye-right"></div>
+                                    <div class="face-feature nose"></div>
+                                    <div class="face-feature mouth"></div>
+                                </div>
+                            </div>
+                            <div class="look-info">
+                                <div class="look-title">School Look</div>
+                                <div class="look-meta">
+                                    <span class="time-badge">⏱️ 10 min</span>
+                                    <span class="stars">★☆☆</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="look-card" data-look="interview">
+                            <div class="face-thumbnail">
+                                <div class="abstract-face">
+                                    <div class="face-circle"></div>
+                                    <div class="face-feature eye-left"></div>
+                                    <div class="face-feature eye-right"></div>
+                                    <div class="face-feature nose"></div>
+                                    <div class="face-feature mouth"></div>
+                                </div>
+                            </div>
+                            <div class="look-info">
+                                <div class="look-title">Interview Look</div>
+                                <div class="look-meta">
+                                    <span class="time-badge">⏱️ 12 min</span>
+                                    <span class="stars">★★★</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="primary-button" id="startTutorial">Start Tutorial</button>
+                </div>
+            </div>
+
+            <!-- SCREEN 2: AR Step Instruction -->
+            <div class="screen screen-2">
+                <div class="status-bar" style="color: #fff;">
+                    <span class="time">9:41</span>
+                    <div class="status-icons">
+                        <span class="signal-icon">📶</span>
+                        <span class="wifi-icon">📡</span>
+                        <span class="battery-icon">🔋</span>
+                    </div>
+                </div>
+                <div class="top-bar">
+                    <div class="back-button" id="backToHome">
+                        <svg class="back-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                            <path d="M15 18l-6-6 6-6"/>
+                        </svg>
+                    </div>
+                    <div class="step-info">
+                        <div class="step-number">Step 1 of 8</div>
+                        <div class="step-label">Foundation</div>
+                    </div>
+                    <div class="spacer"></div>
+                </div>
+
+                <div class="camera-view">
+                    <div class="abstract-face large-face">
+                        <div class="face-circle"></div>
+                        <div class="face-feature eye-left"></div>
+                        <div class="face-feature eye-right"></div>
+                        <div class="face-feature nose"></div>
+                        <div class="face-feature mouth"></div>
+                    </div>
+                    <div class="ar-highlight highlight-cheek-left"></div>
+                    <div class="ar-highlight highlight-cheek-right"></div>
+                    <div class="ar-highlight highlight-forehead"></div>
+                    <div class="camera-overlay"></div>
+                </div>
+
+                <div class="instruction-panel">
+                    <p class="instruction-text">Apply foundation evenly on the highlighted area.</p>
+                    <div class="button-group">
+                        <button class="ghost-button" id="stepBack">Back</button>
+                        <button class="next-button" id="stepNext">Next</button>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-segment active"></div>
+                        <div class="progress-segment"></div>
+                        <div class="progress-segment"></div>
+                        <div class="progress-segment"></div>
+                        <div class="progress-segment"></div>
+                        <div class="progress-segment"></div>
+                        <div class="progress-segment"></div>
+                        <div class="progress-segment"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN 3: Final Result -->
+            <div class="screen screen-3">
+                <div class="status-bar">
+                    <span class="time">9:41</span>
+                    <div class="status-icons">
+                        <span class="signal-icon">📶</span>
+                        <span class="wifi-icon">📡</span>
+                        <span class="battery-icon">🔋</span>
+                    </div>
+                </div>
+                <div class="content">
+                    <div class="header">
+                        <div class="celebration-emoji">🎉</div>
+                        <h1>Great job!</h1>
+                        <p class="subtitle">You completed today's look.</p>
+                    </div>
+
+                    <div class="result-preview">
+                        <div class="abstract-face large-face makeup-face">
+                            <div class="face-circle"></div>
+                            <div class="blush-left"></div>
+                            <div class="blush-right"></div>
+                            <div class="face-feature eye-left"></div>
+                            <div class="face-feature eye-right"></div>
+                            <div class="face-feature nose"></div>
+                            <div class="lips"></div>
+                        </div>
+                        <div class="overlay-text">Long press for Before / After</div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="save-button" id="saveLook">Save Look</button>
+                        <button class="secondary-button" id="restart">Restart</button>
+                        <button class="secondary-button" id="exitApp">Exit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+    </div>
+
+    <script>
+        // Audio Context for sound effects
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioContext = new AudioContext();
+
+        // Sound effect functions
+        function playClickSound() {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.1);
+        }
+
+        function playSuccessSound() {
+            const oscillator1 = audioContext.createOscillator();
+            const oscillator2 = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator1.connect(gainNode);
+            oscillator2.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator1.frequency.value = 523.25; // C5
+            oscillator2.frequency.value = 659.25; // E5
+            oscillator1.type = 'sine';
+            oscillator2.type = 'sine';
+
+            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+
+            oscillator1.start(audioContext.currentTime);
+            oscillator2.start(audioContext.currentTime + 0.1);
+            oscillator1.stop(audioContext.currentTime + 0.3);
+            oscillator2.stop(audioContext.currentTime + 0.4);
+        }
+
+        function playTransitionSound() {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(800, audioContext.currentTime + 0.2);
+            oscillator.type = 'sine';
+
+            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.2);
+        }
+
+        // Ripple effect
+        function createRipple(e) {
+            const button = e.currentTarget;
+            const rect = button.getBoundingClientRect();
+            const ripple = document.createElement('span');
+            const size = Math.max(rect.width, rect.height);
+            const x = e.clientX - rect.left - size / 2;
+            const y = e.clientY - rect.top - size / 2;
+
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = x + 'px';
+            ripple.style.top = y + 'px';
+            ripple.classList.add('ripple');
+
+            button.appendChild(ripple);
+
+            setTimeout(() => {
+                ripple.remove();
+            }, 600);
+        }
+
+        // Screen navigation
+        let currentScreen = 1;
+        let selectedLook = null;
+
+        function showScreen(screenNumber) {
+            const screens = document.querySelectorAll('.screen');
+            const currentScreenEl = document.querySelector('.screen-' + currentScreen);
+            const nextScreenEl = document.querySelector('.screen-' + screenNumber);
+
+            if (currentScreenEl) {
+                currentScreenEl.classList.remove('active');
+                currentScreenEl.classList.add('exit-left');
+            }
+
+            if (nextScreenEl) {
+                nextScreenEl.classList.add('active');
+                nextScreenEl.classList.remove('exit-left');
+            }
+
+            currentScreen = screenNumber;
+            playTransitionSound();
+        }
+
+        // Event listeners
+        document.querySelectorAll('.look-card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                playClickSound();
+                createRipple(e);
+
+                // Remove selection from all cards
+                document.querySelectorAll('.look-card').forEach(c => {
+                    c.style.borderColor = 'transparent';
+                });
+
+                // Highlight selected card
+                this.style.borderColor = '#ffb3c1';
+                selectedLook = this.dataset.look;
+            });
+        });
+
+        document.getElementById('startTutorial').addEventListener('click', function(e) {
+            if (!selectedLook) {
+                // Auto-select first look if none selected
+                selectedLook = 'date';
+            }
+            playClickSound();
+            createRipple(e);
+
+            // Show loading briefly
+            const loading = document.getElementById('loading');
+            loading.classList.add('show');
+
+            setTimeout(() => {
+                loading.classList.remove('show');
+                showScreen(2);
+            }, 800);
+        });
+
+        document.getElementById('backToHome').addEventListener('click', function(e) {
+            playClickSound();
+            showScreen(1);
+        });
+
+        document.getElementById('stepBack').addEventListener('click', function(e) {
+            playClickSound();
+            createRipple(e);
+            // In a real app, this would go to previous step
+        });
+
+        document.getElementById('stepNext').addEventListener('click', function(e) {
+            playClickSound();
+            createRipple(e);
+
+            // Simulate completing all steps
+            const loading = document.getElementById('loading');
+            loading.classList.add('show');
+
+            setTimeout(() => {
+                loading.classList.remove('show');
+                playSuccessSound();
+                showScreen(3);
+            }, 1000);
+        });
+
+        document.getElementById('saveLook').addEventListener('click', function(e) {
+            playSuccessSound();
+            createRipple(e);
+
+            // Simulate saving
+            this.textContent = 'Saved! ✓';
+            setTimeout(() => {
+                this.textContent = 'Save Look';
+            }, 2000);
+        });
+
+        document.getElementById('restart').addEventListener('click', function(e) {
+            playClickSound();
+            createRipple(e);
+            showScreen(2);
+        });
+
+        document.getElementById('exitApp').addEventListener('click', function(e) {
+            playClickSound();
+            createRipple(e);
+            showScreen(1);
+            selectedLook = null;
+            document.querySelectorAll('.look-card').forEach(c => {
+                c.style.borderColor = 'transparent';
+            });
+        });
+
+        // Add ripple to all buttons
+        document.querySelectorAll('button, .look-card, .back-button').forEach(element => {
+            element.addEventListener('click', createRipple);
+        });
+
+        // Create floating particles on screen 3
+        function createParticles() {
+            const resultPreview = document.querySelector('.result-preview');
+            for (let i = 0; i < 15; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 3 + 's';
+                particle.style.animationDuration = (2 + Math.random() * 2) + 's';
+                resultPreview.appendChild(particle);
+            }
+        }
+
+        // Initialize
+        window.addEventListener('load', () => {
+            createParticles();
+        });
+
+        // Resume AudioContext on first user interaction (required by browsers)
+        document.addEventListener('click', () => {
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+        }, { once: true });
+    </script>
+</body>
+</html>
