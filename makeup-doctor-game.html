@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix My Makeup — AI Doctor Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .phone {
+            width: 390px;
+            height: 844px;
+            background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+            border-radius: 40px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.1);
+            padding: 60px 24px 24px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .phone::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 30px;
+            background: #000;
+            border-radius: 0 0 20px 20px;
+        }
+
+        .status-bar {
+            position: absolute;
+            top: 10px;
+            left: 24px;
+            right: 24px;
+            display: flex;
+            justify-content: space-between;
+            color: #fff;
+            font-size: 12px;
+            z-index: 100;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes scan {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .screen-title {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ff6b9d 0%, #ff8ba0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #999;
+            font-size: 14px;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 24px;
+            gap: 12px;
+        }
+
+        .back-btn {
+            width: 40px;
+            height: 40px;
+            background: #fff;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .back-btn:active {
+            transform: scale(0.95);
+        }
+
+        .top-bar-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        /* Camera Frame */
+        .camera-container {
+            flex: 1;
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        .camera-overlay {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at center, transparent 30%, rgba(0, 0, 0, 0.4) 100%);
+        }
+
+        .face-guide {
+            width: 220px;
+            height: 280px;
+            border: 3px dashed rgba(255, 255, 255, 0.5);
+            border-radius: 50% 50% 45% 45%;
+            position: relative;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .guide-dot {
+            width: 8px;
+            height: 8px;
+            background: #ff6b9d;
+            border-radius: 50%;
+            position: absolute;
+            box-shadow: 0 0 10px rgba(255, 107, 157, 0.8);
+        }
+
+        .guide-dot:nth-child(1) { top: 20%; left: 30%; }
+        .guide-dot:nth-child(2) { top: 20%; right: 30%; }
+        .guide-dot:nth-child(3) { top: 40%; left: 50%; transform: translateX(-50%); }
+        .guide-dot:nth-child(4) { bottom: 30%; left: 30%; }
+        .guide-dot:nth-child(5) { bottom: 30%; right: 30%; }
+
+        .countdown {
+            position: absolute;
+            font-size: 72px;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            animation: pulse 1s ease-in-out;
+        }
+
+        /* Face Preview */
+        .face-preview {
+            width: 100%;
+            height: 340px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .face-model {
+            width: 180px;
+            height: 240px;
+            position: relative;
+        }
+
+        .face-shape {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #ffd6a5 0%, #ffb88c 100%);
+            border-radius: 50% 50% 45% 45%;
+            position: relative;
+            box-shadow: inset 0 -20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .hair {
+            position: absolute;
+            top: -10px;
+            left: 10%;
+            width: 80%;
+            height: 60px;
+            background: linear-gradient(180deg, #3d2817 0%, #5c3d2e 100%);
+            border-radius: 50% 50% 0 0;
+        }
+
+        .eye {
+            width: 28px;
+            height: 32px;
+            position: absolute;
+            top: 35%;
+        }
+
+        .eye-left {
+            left: 25%;
+        }
+
+        .eye-right {
+            right: 25%;
+        }
+
+        .eyeball {
+            width: 100%;
+            height: 100%;
+            background: white;
+            border-radius: 50% 50% 45% 45%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .iris {
+            width: 18px;
+            height: 18px;
+            background: radial-gradient(circle, #4a90e2 0%, #2c5aa0 100%);
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .pupil {
+            width: 8px;
+            height: 8px;
+            background: #000;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .eyeliner {
+            position: absolute;
+            top: -2px;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: #2d3748;
+            border-radius: 50% 50% 0 0;
+            transition: all 0.3s;
+        }
+
+        .eyeliner.thick {
+            height: 8px;
+            background: #1a202c;
+        }
+
+        .nose {
+            position: absolute;
+            top: 52%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 25px;
+        }
+
+        .nostril {
+            width: 6px;
+            height: 6px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 50%;
+            position: absolute;
+            bottom: 0;
+        }
+
+        .nostril-left { left: 0; }
+        .nostril-right { right: 0; }
+
+        .mouth {
+            position: absolute;
+            bottom: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 20px;
+            border-bottom: 3px solid #d4756e;
+            border-radius: 0 0 50% 50%;
+        }
+
+        .blush {
+            width: 40px;
+            height: 30px;
+            background: radial-gradient(circle, rgba(255, 107, 157, 0.4) 0%, transparent 70%);
+            border-radius: 50%;
+            position: absolute;
+            top: 48%;
+            transition: all 0.3s;
+        }
+
+        .blush-left {
+            left: 5%;
+        }
+
+        .blush-right {
+            right: 5%;
+        }
+
+        .blush.uneven {
+            opacity: 1.5;
+            filter: blur(2px);
+        }
+
+        /* Error Markers */
+        .error-marker {
+            width: 24px;
+            height: 24px;
+            background: #ff4444;
+            border-radius: 50%;
+            position: absolute;
+            border: 3px solid white;
+            box-shadow: 0 4px 12px rgba(255, 68, 68, 0.5);
+            animation: pulse 1.5s ease-in-out infinite;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .error-marker::before {
+            content: '!';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .marker-1 { top: 35%; left: 10%; }
+        .marker-2 { top: 48%; right: 5%; }
+
+        .scan-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent 0%, #ff6b9d 50%, transparent 100%);
+            box-shadow: 0 0 10px rgba(255, 107, 157, 0.8);
+            animation: scan 2s linear infinite;
+        }
+
+        /* Issues List */
+        .issues-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 24px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .issue-card {
+            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+            padding: 16px 20px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            font-size: 15px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s;
+            cursor: pointer;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .issue-card:hover {
+            transform: translateX(4px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .issue-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #ff6b9d 0%, #ff8ba0 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 4px 8px rgba(255, 107, 157, 0.3);
+        }
+
+        .issue-icon::before {
+            content: '✗';
+            color: white;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .issue-card.fixed .issue-icon {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        }
+
+        .issue-card.fixed .issue-icon::before {
+            content: '✓';
+        }
+
+        /* Buttons */
+        .shutter-button {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #ff6b9d 0%, #ff8ba0 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 15px;
+            box-shadow: 0 8px 24px rgba(255, 107, 157, 0.5);
+            margin: 0 auto 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .shutter-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 32px rgba(255, 107, 157, 0.6);
+        }
+
+        .shutter-button:active {
+            transform: scale(0.95);
+        }
+
+        .shutter-button.capturing {
+            animation: pulse 0.5s ease-in-out;
+            pointer-events: none;
+        }
+
+        .hint-text {
+            text-align: center;
+            color: #999;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .primary-button {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #ff6b9d 0%, #ff8ba0 100%);
+            color: white;
+            font-size: 17px;
+            font-weight: 600;
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(255, 107, 157, 0.4);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .primary-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(255, 107, 157, 0.5);
+        }
+
+        .primary-button:active {
+            transform: translateY(0);
+        }
+
+        /* AR Correction */
+        .ar-container {
+            flex: 1;
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .ar-face {
+            position: relative;
+            width: 200px;
+            height: 260px;
+        }
+
+        .highlight-overlay {
+            position: absolute;
+            background: rgba(255, 107, 157, 0.15);
+            border: 2px solid rgba(255, 107, 157, 0.6);
+            border-radius: 16px;
+            box-shadow: 0 0 20px rgba(255, 107, 157, 0.4);
+            pointer-events: none;
+        }
+
+        .highlight-eyeliner {
+            top: 25%;
+            left: 15%;
+            width: 35%;
+            height: 15%;
+        }
+
+        .highlight-blush {
+            top: 40%;
+            right: 5%;
+            width: 30%;
+            height: 20%;
+        }
+
+        .instruction-box {
+            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+            padding: 16px 20px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            margin-bottom: 20px;
+        }
+
+        .instruction-text {
+            text-align: center;
+            color: #666;
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .slider-container {
+            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            margin-bottom: 20px;
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            color: #666;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .slider-track {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .slider-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b9d 0%, #ff8ba0 100%);
+            border-radius: 4px;
+            position: relative;
+            transition: width 0.1s;
+        }
+
+        .slider-thumb {
+            width: 28px;
+            height: 28px;
+            background: white;
+            border: 3px solid #ff6b9d;
+            border-radius: 50%;
+            position: absolute;
+            right: -14px;
+            top: 50%;
+            transform: translateY(-50%);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            cursor: grab;
+            transition: transform 0.2s;
+        }
+
+        .slider-thumb:hover {
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .slider-thumb:active {
+            cursor: grabbing;
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        .button-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .ghost-button {
+            flex: 1;
+            padding: 18px;
+            background: transparent;
+            color: #666;
+            font-size: 17px;
+            font-weight: 600;
+            border: 2px solid #ddd;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .ghost-button:hover {
+            background: #f5f5f5;
+            border-color: #ccc;
+        }
+
+        .done-button {
+            flex: 1;
+            padding: 18px;
+            background: linear-gradient(135deg, #ff6b9d 0%, #ff8ba0 100%);
+            color: white;
+            font-size: 17px;
+            font-weight: 600;
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(255, 107, 157, 0.4);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .done-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(255, 107, 157, 0.5);
+        }
+
+        /* Progress */
+        .progress-container {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .progress-dot {
+            width: 8px;
+            height: 8px;
+            background: #ddd;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .progress-dot.active {
+            background: #ff6b9d;
+            width: 24px;
+            border-radius: 4px;
+        }
+
+        .progress-dot.completed {
+            background: #48bb78;
+        }
+
+        /* Success Screen */
+        .success-icon {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 40px auto;
+            box-shadow: 0 8px 32px rgba(72, 187, 120, 0.4);
+            animation: pulse 1s ease-in-out;
+        }
+
+        .success-icon::before {
+            content: '✓';
+            color: white;
+            font-size: 64px;
+            font-weight: 700;
+        }
+
+        .success-message {
+            text-align: center;
+            color: #333;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .success-submessage {
+            text-align: center;
+            color: #999;
+            font-size: 15px;
+            margin-bottom: 40px;
+        }
+
+        @media (max-width: 480px) {
+            .phone {
+                width: 100%;
+                height: 100vh;
+                border-radius: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="phone">
+        <div class="status-bar">
+            <span>9:41</span>
+            <span>● ● ●</span>
+        </div>
+
+        <!-- SCREEN 1: Capture Face -->
+        <div class="screen active" id="screen1">
+            <div class="header">
+                <div class="screen-title">Fix My Makeup</div>
+                <div class="subtitle">AI-Powered Makeup Doctor</div>
+            </div>
+
+            <div class="camera-container">
+                <div class="camera-overlay"></div>
+                <div class="face-guide" id="faceGuide">
+                    <div class="guide-dot"></div>
+                    <div class="guide-dot"></div>
+                    <div class="guide-dot"></div>
+                    <div class="guide-dot"></div>
+                    <div class="guide-dot"></div>
+                </div>
+                <div class="countdown" id="countdown" style="display: none;"></div>
+            </div>
+
+            <div class="shutter-button" id="captureBtn">
+                <span>Capture</span>
+            </div>
+            <div class="hint-text">
+                Position your face within the guide<br>
+                and tap capture to begin analysis
+            </div>
+        </div>
+
+        <!-- SCREEN 2: AI Makeup Report -->
+        <div class="screen" id="screen2">
+            <div class="top-bar">
+                <div class="back-btn" onclick="goToScreen(1)">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    </svg>
+                </div>
+                <div class="top-bar-title">Your Makeup Report</div>
+            </div>
+
+            <div class="progress-container">
+                <div class="progress-dot completed"></div>
+                <div class="progress-dot active"></div>
+                <div class="progress-dot"></div>
+            </div>
+
+            <div class="face-preview">
+                <div class="face-model">
+                    <div class="face-shape">
+                        <div class="hair"></div>
+
+                        <div class="eye eye-left">
+                            <div class="eyeball">
+                                <div class="iris">
+                                    <div class="pupil"></div>
+                                </div>
+                            </div>
+                            <div class="eyeliner thick" id="eyelinerLeft"></div>
+                        </div>
+
+                        <div class="eye eye-right">
+                            <div class="eyeball">
+                                <div class="iris">
+                                    <div class="pupil"></div>
+                                </div>
+                            </div>
+                            <div class="eyeliner"></div>
+                        </div>
+
+                        <div class="nose">
+                            <div class="nostril nostril-left"></div>
+                            <div class="nostril nostril-right"></div>
+                        </div>
+
+                        <div class="mouth"></div>
+
+                        <div class="blush blush-left"></div>
+                        <div class="blush blush-right uneven" id="blushRight"></div>
+                    </div>
+
+                    <div class="error-marker marker-1"></div>
+                    <div class="error-marker marker-2"></div>
+                </div>
+                <div class="scan-line" id="scanLine" style="display: none;"></div>
+            </div>
+
+            <div class="issues-list" id="issuesList">
+                <div class="issue-card" data-issue="eyeliner">
+                    <div class="issue-icon"></div>
+                    <div>Left eyeliner too thick</div>
+                </div>
+                <div class="issue-card" data-issue="blush">
+                    <div class="issue-icon"></div>
+                    <div>Blush uneven on right side</div>
+                </div>
+            </div>
+
+            <button class="primary-button" onclick="startARCorrection()">Fix with AR</button>
+        </div>
+
+        <!-- SCREEN 3: AR Correction Mode -->
+        <div class="screen" id="screen3">
+            <div class="top-bar">
+                <div class="back-btn" onclick="goToScreen(2)">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    </svg>
+                </div>
+                <div class="top-bar-title" id="arTitle">Fix Eyeliner</div>
+            </div>
+
+            <div class="progress-container">
+                <div class="progress-dot completed"></div>
+                <div class="progress-dot completed"></div>
+                <div class="progress-dot active"></div>
+            </div>
+
+            <div class="ar-container">
+                <div class="ar-face">
+                    <div class="face-shape">
+                        <div class="hair"></div>
+
+                        <div class="eye eye-left">
+                            <div class="eyeball">
+                                <div class="iris">
+                                    <div class="pupil"></div>
+                                </div>
+                            </div>
+                            <div class="eyeliner thick" id="arEyeliner"></div>
+                        </div>
+
+                        <div class="eye eye-right">
+                            <div class="eyeball">
+                                <div class="iris">
+                                    <div class="pupil"></div>
+                                </div>
+                            </div>
+                            <div class="eyeliner"></div>
+                        </div>
+
+                        <div class="nose">
+                            <div class="nostril nostril-left"></div>
+                            <div class="nostril nostril-right"></div>
+                        </div>
+
+                        <div class="mouth"></div>
+
+                        <div class="blush blush-left"></div>
+                        <div class="blush blush-right" id="arBlush"></div>
+                    </div>
+
+                    <div class="highlight-overlay highlight-eyeliner" id="highlightEyeliner"></div>
+                    <div class="highlight-overlay highlight-blush" id="highlightBlush" style="display: none;"></div>
+                </div>
+            </div>
+
+            <div class="instruction-box">
+                <div class="instruction-text" id="instructionText">Adjust eyeliner thickness</div>
+            </div>
+
+            <div class="slider-container">
+                <div class="slider-labels">
+                    <span>Less</span>
+                    <span>More</span>
+                </div>
+                <div class="slider-track" id="sliderTrack">
+                    <div class="slider-fill" id="sliderFill">
+                        <div class="slider-thumb" id="sliderThumb"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="button-row">
+                <button class="ghost-button" onclick="skipCorrection()">Skip</button>
+                <button class="done-button" onclick="completeCorrection()">Done</button>
+            </div>
+        </div>
+
+        <!-- SCREEN 4: Success -->
+        <div class="screen" id="screen4">
+            <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+                <div class="success-icon"></div>
+                <div class="success-message">All Fixed!</div>
+                <div class="success-submessage">Your makeup looks perfect now</div>
+
+                <div class="face-preview" style="margin-bottom: 24px;">
+                    <div class="face-model">
+                        <div class="face-shape">
+                            <div class="hair"></div>
+
+                            <div class="eye eye-left">
+                                <div class="eyeball">
+                                    <div class="iris">
+                                        <div class="pupil"></div>
+                                    </div>
+                                </div>
+                                <div class="eyeliner"></div>
+                            </div>
+
+                            <div class="eye eye-right">
+                                <div class="eyeball">
+                                    <div class="iris">
+                                        <div class="pupil"></div>
+                                    </div>
+                                </div>
+                                <div class="eyeliner"></div>
+                            </div>
+
+                            <div class="nose">
+                                <div class="nostril nostril-left"></div>
+                                <div class="nostril nostril-right"></div>
+                            </div>
+
+                            <div class="mouth"></div>
+
+                            <div class="blush blush-left"></div>
+                            <div class="blush blush-right"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="primary-button" onclick="restart()">Try Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sound Effects using Web Audio API
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            switch(type) {
+                case 'click':
+                    oscillator.frequency.value = 800;
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.1);
+                    break;
+
+                case 'capture':
+                    oscillator.frequency.value = 1200;
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                    break;
+
+                case 'scan':
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(800, audioContext.currentTime + 0.5);
+                    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.5);
+                    break;
+
+                case 'success':
+                    // Play a pleasant chord
+                    const frequencies = [523.25, 659.25, 783.99]; // C, E, G
+                    frequencies.forEach((freq, i) => {
+                        const osc = audioContext.createOscillator();
+                        const gain = audioContext.createGain();
+                        osc.connect(gain);
+                        gain.connect(audioContext.destination);
+                        osc.frequency.value = freq;
+                        gain.gain.setValueAtTime(0.1, audioContext.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8);
+                        osc.start(audioContext.currentTime + i * 0.1);
+                        osc.stop(audioContext.currentTime + 0.8 + i * 0.1);
+                    });
+                    return; // Don't need to start oscillator again
+
+                case 'slide':
+                    oscillator.frequency.value = 600;
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.05);
+                    break;
+            }
+        }
+
+        // Game State
+        let currentIssue = 0;
+        const issues = ['eyeliner', 'blush'];
+
+        // Screen Navigation
+        function goToScreen(screenNum) {
+            playSound('click');
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(`screen${screenNum}`).classList.add('active');
+        }
+
+        // Capture Face
+        document.getElementById('captureBtn').addEventListener('click', function() {
+            playSound('capture');
+            this.classList.add('capturing');
+
+            const countdown = document.getElementById('countdown');
+            const guide = document.getElementById('faceGuide');
+
+            let count = 3;
+            countdown.style.display = 'block';
+            countdown.textContent = count;
+
+            const countInterval = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    countdown.textContent = count;
+                    playSound('click');
+                } else {
+                    clearInterval(countInterval);
+                    countdown.style.display = 'none';
+
+                    // Flash effect
+                    guide.style.opacity = '0';
+                    setTimeout(() => {
+                        guide.style.opacity = '1';
+                        analyzeface();
+                    }, 100);
+                }
+            }, 1000);
+        });
+
+        function analyzeFace() {
+            playSound('scan');
+            goToScreen(2);
+
+            // Show scanning animation
+            const scanLine = document.getElementById('scanLine');
+            scanLine.style.display = 'block';
+
+            setTimeout(() => {
+                scanLine.style.display = 'none';
+            }, 2000);
+        }
+
+        // Start AR Correction
+        function startARCorrection() {
+            playSound('click');
+            currentIssue = 0;
+            goToScreen(3);
+            updateARScreen();
+        }
+
+        function updateARScreen() {
+            const issue = issues[currentIssue];
+
+            if (issue === 'eyeliner') {
+                document.getElementById('arTitle').textContent = 'Fix Eyeliner';
+                document.getElementById('instructionText').textContent = 'Adjust eyeliner thickness';
+                document.getElementById('highlightEyeliner').style.display = 'block';
+                document.getElementById('highlightBlush').style.display = 'none';
+                document.getElementById('sliderFill').style.width = '80%';
+            } else if (issue === 'blush') {
+                document.getElementById('arTitle').textContent = 'Fix Blush';
+                document.getElementById('instructionText').textContent = 'Adjust blush intensity';
+                document.getElementById('highlightEyeliner').style.display = 'none';
+                document.getElementById('highlightBlush').style.display = 'block';
+                document.getElementById('sliderFill').style.width = '70%';
+            }
+        }
+
+        // Slider Interaction
+        const sliderTrack = document.getElementById('sliderTrack');
+        const sliderFill = document.getElementById('sliderFill');
+        const sliderThumb = document.getElementById('sliderThumb');
+        const arEyeliner = document.getElementById('arEyeliner');
+        const arBlush = document.getElementById('arBlush');
+
+        let isDragging = false;
+
+        function updateSlider(clientX) {
+            const rect = sliderTrack.getBoundingClientRect();
+            let percentage = ((clientX - rect.left) / rect.width) * 100;
+            percentage = Math.max(0, Math.min(100, percentage));
+
+            sliderFill.style.width = percentage + '%';
+
+            // Update makeup based on slider
+            if (issues[currentIssue] === 'eyeliner') {
+                const thickness = 4 + (percentage / 100) * 6;
+                arEyeliner.style.height = thickness + 'px';
+            } else if (issues[currentIssue] === 'blush') {
+                const opacity = 0.3 + (percentage / 100) * 0.7;
+                arBlush.style.opacity = opacity;
+            }
+
+            playSound('slide');
+        }
+
+        sliderThumb.addEventListener('mousedown', () => isDragging = true);
+        sliderThumb.addEventListener('touchstart', () => isDragging = true);
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging) updateSlider(e.clientX);
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            if (isDragging) updateSlider(e.touches[0].clientX);
+        });
+
+        document.addEventListener('mouseup', () => isDragging = false);
+        document.addEventListener('touchend', () => isDragging = false);
+
+        sliderTrack.addEventListener('click', (e) => {
+            playSound('click');
+            updateSlider(e.clientX);
+        });
+
+        // Skip Correction
+        function skipCorrection() {
+            playSound('click');
+            nextIssue();
+        }
+
+        // Complete Correction
+        function completeCorrection() {
+            playSound('success');
+
+            // Mark issue as fixed
+            const issueCards = document.querySelectorAll('.issue-card');
+            issueCards[currentIssue].classList.add('fixed');
+
+            nextIssue();
+        }
+
+        function nextIssue() {
+            currentIssue++;
+
+            if (currentIssue < issues.length) {
+                updateARScreen();
+            } else {
+                // All issues fixed!
+                setTimeout(() => {
+                    goToScreen(4);
+                }, 300);
+            }
+        }
+
+        // Restart
+        function restart() {
+            playSound('click');
+            currentIssue = 0;
+
+            // Reset all issue cards
+            document.querySelectorAll('.issue-card').forEach(card => {
+                card.classList.remove('fixed');
+            });
+
+            // Reset capture button
+            document.getElementById('captureBtn').classList.remove('capturing');
+
+            goToScreen(1);
+        }
+
+        // Add button sound effects
+        document.querySelectorAll('button, .back-btn, .shutter-button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (!btn.id || btn.id !== 'captureBtn') { // captureBtn has its own sound
+                    playSound('click');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
