@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hair Salon - Interactive Styling Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            height: 100vh;
+            width: 100vw;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #salon-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: none;
+        }
+
+        #custom-cursor {
+            position: absolute;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            z-index: 100;
+            display: none;
+            font-size: 32px;
+            filter: drop-shadow(0 0 10px rgba(0,0,0,0.3));
+        }
+
+        #particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        .particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: radial-gradient(circle, #fff, transparent);
+            border-radius: 50%;
+            animation: float-up 2s ease-out forwards;
+            opacity: 0;
+        }
+
+        @keyframes float-up {
+            0% {
+                transform: translateY(0) scale(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-200px) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        #scene-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            opacity: 1;
+            transition: opacity 0.5s;
+        }
+
+        #scene-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .scene-title {
+            font-size: 64px;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 40px rgba(255, 255, 255, 0.8);
+            margin-bottom: 20px;
+            animation: glow-pulse 2s infinite;
+        }
+
+        @keyframes glow-pulse {
+            0%, 100% { text-shadow: 0 0 40px rgba(255, 255, 255, 0.8); }
+            50% { text-shadow: 0 0 80px rgba(255, 255, 255, 1); }
+        }
+
+        .scene-subtitle {
+            font-size: 24px;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 40px;
+            letter-spacing: 2px;
+        }
+
+        .start-btn {
+            padding: 20px 60px;
+            font-size: 24px;
+            font-weight: 700;
+            color: #fff;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 60px rgba(102, 126, 234, 0.8);
+        }
+
+        #hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 150;
+        }
+
+        .top-bar {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 40px;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 20px 40px;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+        }
+
+        .progress-indicator {
+            color: #fff;
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .star-count {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #ffd700;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        #tools-panel {
+            position: absolute;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            pointer-events: all;
+        }
+
+        .tool-item {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 3px solid rgba(255, 255, 255, 0.5);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .tool-item:hover {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.3);
+            border-color: #fff;
+        }
+
+        .tool-item.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #fff;
+            box-shadow: 0 0 30px rgba(102, 126, 234, 0.8);
+        }
+
+        .tool-icon {
+            font-size: 32px;
+            margin-bottom: 4px;
+        }
+
+        #color-palette {
+            position: absolute;
+            left: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            pointer-events: all;
+        }
+
+        .color-swatch {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 4px solid transparent;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .color-swatch:hover {
+            transform: scale(1.15);
+        }
+
+        .color-swatch.active {
+            border-color: #fff;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
+        }
+
+        #length-control {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 400px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 20px 30px;
+            border-radius: 30px;
+            backdrop-filter: blur(10px);
+            pointer-events: all;
+        }
+
+        .control-label {
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        .length-slider {
+            width: 100%;
+            height: 8px;
+            -webkit-appearance: none;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 5px;
+            outline: none;
+        }
+
+        .length-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #fff;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+        }
+
+        .length-slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #fff;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+        }
+
+        #action-buttons {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+            pointer-events: all;
+        }
+
+        .action-btn {
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #fff;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 25px;
+            background: rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #fff;
+            transform: scale(1.05);
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #fff;
+        }
+
+        .action-btn.primary:hover {
+            box-shadow: 0 0 30px rgba(102, 126, 234, 0.8);
+        }
+
+        #completion-modal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 500px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 30px;
+            padding: 50px;
+            text-align: center;
+            z-index: 300;
+            box-shadow: 0 20px 80px rgba(0, 0, 0, 0.5);
+            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        #completion-modal.show {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .completion-title {
+            font-size: 48px;
+            font-weight: 900;
+            color: #fff;
+            margin-bottom: 20px;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
+        }
+
+        .completion-stars {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .completion-message {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        #final-showcase {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 300;
+            opacity: 0;
+            transition: opacity 1s;
+        }
+
+        #final-showcase.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .showcase-title {
+            font-size: 72px;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 60px rgba(255, 255, 255, 1);
+            margin-bottom: 40px;
+            animation: showcase-title-in 1s ease-out;
+        }
+
+        @keyframes showcase-title-in {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        #final-character {
+            width: 500px;
+            height: 600px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            overflow: hidden;
+            box-shadow: 0 30px 100px rgba(0, 0, 0, 0.5);
+            margin-bottom: 40px;
+            animation: showcase-zoom-in 1.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            position: relative;
+        }
+
+        @keyframes showcase-zoom-in {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .showcase-stars {
+            font-size: 80px;
+            margin-bottom: 30px;
+            animation: stars-pop 1s ease-out 1.5s both;
+        }
+
+        @keyframes stars-pop {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .showcase-message {
+            font-size: 24px;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 40px;
+            text-align: center;
+            max-width: 600px;
+            line-height: 1.6;
+            animation: message-fade-in 1s ease-out 2s both;
+        }
+
+        @keyframes message-fade-in {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .scene-title { font-size: 36px; }
+            .scene-subtitle { font-size: 16px; }
+            .start-btn { padding: 15px 40px; font-size: 18px; }
+            #tools-panel { right: 15px; }
+            .tool-item { width: 60px; height: 60px; }
+            #color-palette { left: 15px; gap: 10px; }
+            .color-swatch { width: 45px; height: 45px; }
+            #length-control { width: 80%; }
+            #final-character { width: 90%; max-width: 400px; height: 500px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="salon-canvas"></canvas>
+        <div id="custom-cursor">✂️</div>
+        <div id="particles"></div>
+
+        <div id="scene-overlay">
+            <div class="scene-title">Hair Salon</div>
+            <div class="scene-subtitle">Create Stunning Hairstyles</div>
+            <button class="start-btn" onclick="startGame()">Start Styling</button>
+        </div>
+
+        <div id="hud">
+            <div class="top-bar">
+                <div class="progress-indicator">
+                    <span id="current-step">Step 1</span> / <span id="total-steps">5</span>
+                </div>
+                <div class="star-count">
+                    ⭐ <span id="star-total">0</span>
+                </div>
+            </div>
+
+            <div id="tools-panel"></div>
+            <div id="color-palette"></div>
+
+            <div id="length-control">
+                <div class="control-label" id="control-label">Hair Length</div>
+                <input type="range" class="length-slider" min="0" max="100" value="50" id="length-slider">
+            </div>
+
+            <div id="action-buttons">
+                <button class="action-btn" onclick="undoLast()">Undo</button>
+                <button class="action-btn" onclick="clearScene()">Reset</button>
+                <button class="action-btn primary" onclick="completeStep()">Complete</button>
+            </div>
+        </div>
+
+        <div id="completion-modal">
+            <div class="completion-title">Perfect!</div>
+            <div class="completion-stars">⭐⭐⭐</div>
+            <div class="completion-message">
+                Amazing styling!<br>
+                You've mastered this step!
+            </div>
+            <button class="start-btn" onclick="nextScene()">Continue</button>
+        </div>
+
+        <div id="final-showcase">
+            <div class="showcase-title">✨ Gorgeous! ✨</div>
+            <div id="final-character">
+                <canvas id="final-canvas"></canvas>
+            </div>
+            <div class="showcase-stars">⭐⭐⭐</div>
+            <div class="showcase-message">
+                You've created a stunning hairstyle!<br>
+                Total Stars Earned: <span id="final-star-count">15</span>
+            </div>
+            <button class="start-btn" onclick="resetGame()">Create New Style</button>
+        </div>
+    </div>
+
+    <script>
+        // Audio Context
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        function createSound(frequency, type = 'sine', duration = 0.1) {
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.frequency.value = frequency;
+            oscillator.type = type;
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + duration);
+        }
+
+        const sounds = {
+            scissors: () => createSound(800, 'square', 0.1),
+            brush: () => createSound(120, 'triangle', 0.05),
+            spray: () => createSound(600, 'sine', 0.2),
+            click: () => createSound(800, 'square', 0.05),
+            success: () => {
+                [262, 330, 392].forEach((freq, i) => {
+                    setTimeout(() => createSound(freq, 'sine', 0.2), i * 100);
+                });
+            }
+        };
+
+        // Game State
+        const gameState = {
+            currentScene: 0,
+            totalStars: 0,
+            currentTool: 'scissors',
+            currentColor: '#8B4513',
+            hairLength: 50,
+            isDrawing: false,
+            mousePos: { x: 0, y: 0 },
+            savedLayers: [],
+            strokeHistory: []
+        };
+
+        // Scenes
+        const scenes = [
+            {
+                name: 'Wash Hair',
+                subtitle: 'Clean and prepare',
+                tools: ['💧', '🧴', '🚿'],
+                toolNames: ['water', 'shampoo', 'rinse'],
+                colors: [],
+                showColors: false,
+                showSlider: false,
+                completionStars: 3
+            },
+            {
+                name: 'Cut & Style',
+                subtitle: 'Shape the perfect cut',
+                tools: ['✂️', '🪮', '💈'],
+                toolNames: ['scissors', 'comb', 'razor'],
+                colors: [],
+                showColors: false,
+                showSlider: true,
+                sliderLabel: 'Hair Length',
+                completionStars: 3
+            },
+            {
+                name: 'Color Hair',
+                subtitle: 'Add vibrant colors',
+                tools: ['🎨', '🖌️', '✨'],
+                toolNames: ['dye', 'brush', 'highlight'],
+                colors: ['#000000', '#8B4513', '#FFD700', '#FF6347', '#9370DB', '#00CED1'],
+                showColors: true,
+                showSlider: false,
+                completionStars: 3
+            },
+            {
+                name: 'Style & Curl',
+                subtitle: 'Add texture and volume',
+                tools: ['🔥', '💨', '🌀'],
+                toolNames: ['curler', 'dryer', 'wave'],
+                colors: [],
+                showColors: false,
+                showSlider: true,
+                sliderLabel: 'Curl Intensity',
+                completionStars: 3
+            },
+            {
+                name: 'Accessories',
+                subtitle: 'Add finishing touches',
+                tools: ['🎀', '👑', '🌸'],
+                toolNames: ['bow', 'crown', 'flower'],
+                colors: ['#FF69B4', '#FFD700', '#FF1493', '#00CED1', '#9370DB', '#FFA500'],
+                showColors: true,
+                showSlider: false,
+                completionStars: 3
+            }
+        ];
+
+        // Canvas Setup
+        const canvas = document.getElementById('salon-canvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            redrawAll();
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Drawing Functions
+        function drawBackground() {
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, '#f093fb');
+            gradient.addColorStop(1, '#f5576c');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Ambient sparkles
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+            for (let i = 0; i < 50; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const size = Math.random() * 3;
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function drawHead() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const headRadius = 120;
+
+            ctx.save();
+
+            // Head
+            ctx.fillStyle = '#f5d5c8';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, headRadius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Shading
+            const gradient = ctx.createRadialGradient(
+                centerX - 30, centerY - 30, 20,
+                centerX, centerY, headRadius
+            );
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+            gradient.addColorStop(1, 'rgba(200, 150, 120, 0.2)');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, headRadius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Eyes
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(centerX - 35, centerY - 10, 8, 0, Math.PI * 2);
+            ctx.arc(centerX + 35, centerY - 10, 8, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Eye shine
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(centerX - 33, centerY - 12, 3, 0, Math.PI * 2);
+            ctx.arc(centerX + 37, centerY - 12, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Nose
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(centerX, centerY + 20);
+            ctx.stroke();
+
+            // Smile
+            ctx.strokeStyle = '#d4a5a5';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY + 20, 30, 0.3, Math.PI - 0.3);
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        function drawHair() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const headRadius = 120;
+            const hairLengthFactor = gameState.hairLength / 100;
+
+            ctx.save();
+
+            // Hair base
+            const hairGradient = ctx.createRadialGradient(
+                centerX, centerY - 60, 20,
+                centerX, centerY - 60, 150 + hairLengthFactor * 100
+            );
+            hairGradient.addColorStop(0, gameState.currentColor);
+            hairGradient.addColorStop(1, darkenColor(gameState.currentColor, 0.3));
+
+            ctx.fillStyle = hairGradient;
+            ctx.beginPath();
+
+            // Hair shape based on length
+            const baseWidth = 140;
+            const hairLength = 80 + hairLengthFactor * 150;
+
+            ctx.ellipse(centerX, centerY - 50, baseWidth, hairLength, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Hair strands for texture
+            ctx.strokeStyle = lightenColor(gameState.currentColor, 0.2);
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+
+            for (let i = 0; i < 15; i++) {
+                const angle = (Math.PI / 15) * i - Math.PI / 2;
+                const startX = centerX + Math.cos(angle) * baseWidth * 0.7;
+                const startY = centerY - 50 + Math.sin(angle) * hairLength * 0.7;
+                const endX = centerX + Math.cos(angle) * (baseWidth + 20);
+                const endY = centerY - 50 + Math.sin(angle) * (hairLength + 20);
+
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                ctx.lineTo(endX, endY);
+                ctx.stroke();
+            }
+
+            ctx.restore();
+        }
+
+        function darkenColor(color, amount) {
+            const hex = color.replace('#', '');
+            const r = Math.max(0, parseInt(hex.substr(0, 2), 16) * (1 - amount));
+            const g = Math.max(0, parseInt(hex.substr(2, 2), 16) * (1 - amount));
+            const b = Math.max(0, parseInt(hex.substr(4, 2), 16) * (1 - amount));
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+
+        function lightenColor(color, amount) {
+            const hex = color.replace('#', '');
+            const r = Math.min(255, parseInt(hex.substr(0, 2), 16) + 255 * amount);
+            const g = Math.min(255, parseInt(hex.substr(2, 2), 16) + 255 * amount);
+            const b = Math.min(255, parseInt(hex.substr(4, 2), 16) + 255 * amount);
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+
+        function saveCurrentLayer() {
+            const layerData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            gameState.savedLayers.push({
+                scene: gameState.currentScene,
+                data: layerData,
+                timestamp: Date.now()
+            });
+        }
+
+        function redrawAll() {
+            drawBackground();
+            drawHead();
+            drawHair();
+
+            gameState.savedLayers.forEach(layer => {
+                ctx.putImageData(layer.data, 0, 0);
+            });
+        }
+
+        // Game Flow
+        function startGame() {
+            document.getElementById('scene-overlay').classList.add('hidden');
+            loadScene(0);
+        }
+
+        function loadScene(sceneIndex) {
+            if (sceneIndex >= scenes.length) {
+                showFinalShowcase();
+                return;
+            }
+
+            gameState.currentScene = sceneIndex;
+            const scene = scenes[sceneIndex];
+
+            document.getElementById('current-step').textContent = `Step ${sceneIndex + 1}`;
+            document.getElementById('total-steps').textContent = scenes.length;
+
+            showSceneTransition(scene);
+            loadTools(scene);
+            loadColors(scene);
+
+            // Show/hide slider
+            const slider = document.getElementById('length-control');
+            if (scene.showSlider) {
+                slider.style.display = 'block';
+                document.getElementById('control-label').textContent = scene.sliderLabel;
+            } else {
+                slider.style.display = 'none';
+            }
+
+            gameState.isDrawing = false;
+            gameState.strokeHistory = [];
+            redrawAll();
+        }
+
+        function showSceneTransition(scene) {
+            const overlay = document.getElementById('scene-overlay');
+            overlay.classList.remove('hidden');
+            overlay.querySelector('.scene-title').textContent = scene.name;
+            overlay.querySelector('.scene-subtitle').textContent = scene.subtitle;
+            overlay.querySelector('.start-btn').textContent = 'Start';
+            overlay.querySelector('.start-btn').onclick = () => {
+                overlay.classList.add('hidden');
+                createParticleBurst(canvas.width / 2, canvas.height / 2);
+            };
+        }
+
+        function loadTools(scene) {
+            const panel = document.getElementById('tools-panel');
+            panel.innerHTML = '';
+
+            scene.tools.forEach((toolIcon, index) => {
+                const toolDiv = document.createElement('div');
+                toolDiv.className = 'tool-item' + (index === 0 ? ' active' : '');
+                toolDiv.innerHTML = `
+                    <div class="tool-icon">${toolIcon}</div>
+                    <div>${scene.toolNames[index]}</div>
+                `;
+                toolDiv.onclick = () => {
+                    gameState.currentTool = scene.toolNames[index];
+                    document.querySelectorAll('.tool-item').forEach(t => t.classList.remove('active'));
+                    toolDiv.classList.add('active');
+                    document.getElementById('custom-cursor').textContent = toolIcon;
+                    sounds.click();
+                };
+                panel.appendChild(toolDiv);
+            });
+
+            gameState.currentTool = scene.toolNames[0];
+            document.getElementById('custom-cursor').textContent = scene.tools[0];
+        }
+
+        function loadColors(scene) {
+            const palette = document.getElementById('color-palette');
+
+            if (scene.showColors) {
+                palette.style.display = 'grid';
+                palette.innerHTML = '';
+
+                scene.colors.forEach((color, index) => {
+                    const swatch = document.createElement('div');
+                    swatch.className = 'color-swatch' + (index === 0 ? ' active' : '');
+                    swatch.style.background = color;
+                    swatch.onclick = () => {
+                        gameState.currentColor = color;
+                        document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+                        swatch.classList.add('active');
+                        sounds.click();
+                        redrawAll();
+                    };
+                    palette.appendChild(swatch);
+                });
+
+                if (scene.colors.length > 0) {
+                    gameState.currentColor = scene.colors[0];
+                }
+            } else {
+                palette.style.display = 'none';
+            }
+        }
+
+        // Drawing Interaction
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseleave', stopDrawing);
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            gameState.mousePos = { x: touch.clientX, y: touch.clientY };
+            startDrawing();
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            gameState.mousePos = { x: touch.clientX, y: touch.clientY };
+            draw(e);
+        });
+
+        canvas.addEventListener('touchend', stopDrawing);
+
+        function startDrawing(e) {
+            gameState.isDrawing = true;
+            if (e) {
+                gameState.mousePos = { x: e.clientX, y: e.clientY };
+            }
+
+            gameState.strokeHistory.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+
+            if (gameState.currentTool === 'scissors') sounds.scissors();
+            else if (gameState.currentTool === 'brush') sounds.brush();
+            else sounds.spray();
+        }
+
+        function draw(e) {
+            if (!gameState.isDrawing) {
+                if (e) updateCursor(e);
+                return;
+            }
+
+            if (e) {
+                gameState.mousePos = { x: e.clientX, y: e.clientY };
+                updateCursor(e);
+            }
+
+            const x = gameState.mousePos.x;
+            const y = gameState.mousePos.y;
+
+            // Apply effects based on tool
+            ctx.globalAlpha = 0.3;
+
+            if (gameState.currentTool === 'scissors' || gameState.currentTool === 'comb' || gameState.currentTool === 'razor') {
+                // Cutting effect
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.beginPath();
+                ctx.arc(x, y, 20, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                // Drawing effect
+                ctx.globalCompositeOperation = 'source-over';
+                const gradient = ctx.createRadialGradient(x, y, 0, x, y, 30);
+                gradient.addColorStop(0, gameState.currentColor);
+                gradient.addColorStop(1, 'transparent');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(x, y, 30, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.globalAlpha = 1;
+            ctx.globalCompositeOperation = 'source-over';
+
+            if (Math.random() > 0.7) {
+                createParticle(x, y);
+            }
+        }
+
+        function stopDrawing() {
+            gameState.isDrawing = false;
+        }
+
+        function updateCursor(e) {
+            const cursor = document.getElementById('custom-cursor');
+            cursor.style.display = 'block';
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+        }
+
+        canvas.addEventListener('mouseleave', () => {
+            document.getElementById('custom-cursor').style.display = 'none';
+        });
+
+        // Slider
+        document.getElementById('length-slider').addEventListener('input', (e) => {
+            gameState.hairLength = parseInt(e.target.value);
+            redrawAll();
+        });
+
+        // Actions
+        function undoLast() {
+            if (gameState.strokeHistory.length > 0) {
+                const lastState = gameState.strokeHistory.pop();
+                ctx.putImageData(lastState, 0, 0);
+                sounds.click();
+            }
+        }
+
+        function clearScene() {
+            redrawAll();
+            gameState.strokeHistory = [];
+            sounds.click();
+        }
+
+        function completeStep() {
+            saveCurrentLayer();
+
+            const scene = scenes[gameState.currentScene];
+            gameState.totalStars += scene.completionStars;
+            document.getElementById('star-total').textContent = gameState.totalStars;
+
+            const modal = document.getElementById('completion-modal');
+            modal.classList.add('show');
+
+            createParticleBurst(canvas.width / 2, canvas.height / 2, 50);
+            sounds.success();
+        }
+
+        function nextScene() {
+            document.getElementById('completion-modal').classList.remove('show');
+            loadScene(gameState.currentScene + 1);
+        }
+
+        function showFinalShowcase() {
+            const showcase = document.getElementById('final-showcase');
+            const finalCanvas = document.getElementById('final-canvas');
+            const finalCtx = finalCanvas.getContext('2d');
+
+            finalCanvas.width = 500;
+            finalCanvas.height = 600;
+
+            finalCtx.drawImage(canvas,
+                canvas.width/2 - 250, canvas.height/2 - 300,
+                500, 600,
+                0, 0,
+                500, 600
+            );
+
+            document.getElementById('final-star-count').textContent = gameState.totalStars;
+            showcase.classList.add('show');
+
+            setTimeout(() => {
+                createParticleBurst(window.innerWidth / 2, window.innerHeight / 2, 100);
+                sounds.success();
+            }, 500);
+        }
+
+        function resetGame() {
+            gameState.currentScene = 0;
+            gameState.totalStars = 0;
+            gameState.savedLayers = [];
+            gameState.strokeHistory = [];
+            gameState.hairLength = 50;
+            document.getElementById('star-total').textContent = 0;
+            document.getElementById('final-showcase').classList.remove('show');
+            startGame();
+        }
+
+        // Particles
+        function createParticle(x, y) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = x + 'px';
+            particle.style.top = y + 'px';
+            document.getElementById('particles').appendChild(particle);
+            setTimeout(() => particle.remove(), 2000);
+        }
+
+        function createParticleBurst(x, y, count = 20) {
+            for (let i = 0; i < count; i++) {
+                setTimeout(() => {
+                    const offsetX = (Math.random() - 0.5) * 200;
+                    const offsetY = (Math.random() - 0.5) * 200;
+                    createParticle(x + offsetX, y + offsetY);
+                }, i * 30);
+            }
+        }
+
+        window.addEventListener('load', () => {
+            console.log('💇 Hair Salon Game - Ready!');
+        });
+    </script>
+</body>
+</html>
