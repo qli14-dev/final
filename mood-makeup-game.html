@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mood-Driven Makeup Selector - Interactive Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .game-container {
+            position: relative;
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .phone-frame {
+            width: 100%;
+            max-width: 420px;
+            height: 850px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            border-radius: 45px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 0 12px #0a0a0a, 0 0 0 14px #666;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .phone-notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 30px;
+            background: #0a0a0a;
+            border-radius: 0 0 20px 20px;
+            z-index: 100;
+        }
+
+        .camera {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 12px;
+            height: 12px;
+            background: #1a1a2e;
+            border-radius: 50%;
+            border: 1px solid #333;
+        }
+
+        .screen {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #fafafa 0%, #f5f5f5 100%);
+            border-radius: 35px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .screen-view {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 30px 25px;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .screen-view.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .screen-view.exiting {
+            opacity: 0;
+            transform: translateX(-100%);
+        }
+
+        /* Header Styles */
+        .header {
+            margin-bottom: 35px;
+            animation: slideDown 0.6s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header h1 {
+            font-size: 28px;
+            background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .header-subtitle {
+            font-size: 15px;
+            color: #888;
+            font-weight: 400;
+        }
+
+        .header-bar {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            animation: slideDown 0.6s ease-out;
+        }
+
+        .back-button {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, #fff 0%, #f8f8f8 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ff6b9d;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: all 0.2s;
+            border: 2px solid #f0f0f0;
+        }
+
+        .back-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+        }
+
+        .back-button:active {
+            transform: scale(0.95);
+        }
+
+        .header-bar h2 {
+            font-size: 22px;
+            color: #2a2a2a;
+            font-weight: 700;
+            flex: 1;
+        }
+
+        /* Mood Selection Screen */
+        .mood-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-top: 25px;
+        }
+
+        .mood-card {
+            background: linear-gradient(135deg, #fff 0%, #fafafa 100%);
+            border: 3px solid #f0f0f0;
+            border-radius: 24px;
+            padding: 35px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            animation: fadeInUp 0.6s ease-out backwards;
+        }
+
+        .mood-card:nth-child(1) { animation-delay: 0.1s; }
+        .mood-card:nth-child(2) { animation-delay: 0.2s; }
+        .mood-card:nth-child(3) { animation-delay: 0.3s; }
+        .mood-card:nth-child(4) { animation-delay: 0.4s; }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .mood-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+
+        .mood-card.active {
+            border-color: #ff6b9d;
+            background: linear-gradient(135deg, #fff5f9 0%, #ffe8f0 100%);
+            box-shadow: 0 8px 24px rgba(255, 107, 157, 0.25);
+        }
+
+        .mood-icon {
+            width: 75px;
+            height: 75px;
+            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+            border-radius: 50%;
+            margin: 0 auto 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 35px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .mood-card.active .mood-icon {
+            background: linear-gradient(135deg, #ff6b9d 0%, #ff85b3 100%);
+            box-shadow: 0 6px 20px rgba(255, 107, 157, 0.4);
+            transform: scale(1.1);
+        }
+
+        .mood-label {
+            font-size: 17px;
+            font-weight: 700;
+            color: #2a2a2a;
+            letter-spacing: -0.3px;
+        }
+
+        /* Looks Carousel Screen */
+        .carousel {
+            margin: 20px 0;
+            animation: fadeInUp 0.6s ease-out 0.2s backwards;
+        }
+
+        .look-card {
+            background: linear-gradient(135deg, #fff 0%, #fafafa 100%);
+            border-radius: 28px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            border: 2px solid #f5f5f5;
+        }
+
+        .face-preview {
+            width: 100%;
+            height: 280px;
+            background: linear-gradient(135deg, #ffeef5 0%, #ffe8f0 100%);
+            border-radius: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .face-shape {
+            width: 130px;
+            height: 170px;
+            background: linear-gradient(135deg, #ffe0e8 0%, #ffd4e0 100%);
+            border-radius: 65px 65px 80px 80px;
+            position: relative;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        .face-shape::before,
+        .face-shape::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: #c44569;
+            border-radius: 50%;
+            top: 60px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        .face-shape::before { left: 35px; }
+        .face-shape::after { right: 35px; }
+
+        .face-smile {
+            position: absolute;
+            bottom: 45px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 20px;
+            border: 3px solid #c44569;
+            border-top: none;
+            border-radius: 0 0 20px 20px;
+        }
+
+        .preview-makeup {
+            position: absolute;
+            width: 130px;
+            height: 170px;
+        }
+
+        .preview-blush {
+            position: absolute;
+            width: 35px;
+            height: 28px;
+            background: radial-gradient(circle, rgba(255, 181, 198, 0.6) 0%, rgba(255, 181, 198, 0.2) 70%);
+            border-radius: 50%;
+            top: 85px;
+            filter: blur(3px);
+        }
+
+        .preview-blush.left { left: 10px; }
+        .preview-blush.right { right: 10px; }
+
+        .preview-lips {
+            position: absolute;
+            width: 35px;
+            height: 16px;
+            background: linear-gradient(135deg, #ff6b9d 0%, #ff85b3 100%);
+            border-radius: 0 0 18px 18px;
+            bottom: 48px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+
+        .color-swatches {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .swatch {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .swatch:hover {
+            transform: scale(1.1);
+        }
+
+        .swatch-1 { background: linear-gradient(135deg, #ffb3c6 0%, #ff9db5 100%); }
+        .swatch-2 { background: linear-gradient(135deg, #ffd4b8 0%, #ffc4a3 100%); }
+        .swatch-3 { background: linear-gradient(135deg, #ffe0e8 0%, #ffd0dc 100%); }
+
+        .look-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .look-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2a2a2a;
+            letter-spacing: -0.3px;
+        }
+
+        .try-button {
+            background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(255, 107, 157, 0.3);
+            transition: all 0.2s;
+            letter-spacing: -0.2px;
+        }
+
+        .try-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 157, 0.4);
+        }
+
+        .try-button:active {
+            transform: scale(0.95);
+        }
+
+        .pagination-dots {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            background: #d4d4d4;
+            border-radius: 50%;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .dot:hover {
+            background: #bbb;
+        }
+
+        .dot.active {
+            background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);
+            width: 30px;
+            border-radius: 5px;
+        }
+
+        /* AR Try-On Screen */
+        .ar-header {
+            text-align: center;
+            margin-bottom: 20px;
+            animation: slideDown 0.6s ease-out;
+        }
+
+        .ar-title {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 5px;
+            letter-spacing: -0.5px;
+        }
+
+        .ar-subtitle {
+            font-size: 17px;
+            color: #888;
+            font-weight: 500;
+        }
+
+        .camera-view {
+            position: relative;
+            width: 100%;
+            height: 520px;
+            background: linear-gradient(135deg, #ffeef5 0%, #ffe8f0 100%);
+            border-radius: 28px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            animation: fadeInUp 0.6s ease-out 0.2s backwards;
+        }
+
+        .camera-face {
+            width: 220px;
+            height: 280px;
+            background: linear-gradient(135deg, #ffe0e8 0%, #ffd4e0 100%);
+            border-radius: 110px 110px 135px 135px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .camera-face::before,
+        .camera-face::after {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            background: #c44569;
+            border-radius: 50%;
+            top: 100px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+            animation: blink 4s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            0%, 45%, 55%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(0.1); }
+        }
+
+        .camera-face::before { left: 60px; }
+        .camera-face::after { right: 60px; }
+
+        .makeup-overlay {
+            position: absolute;
+            width: 220px;
+            height: 280px;
+            animation: fadeIn 1s ease-out 0.5s backwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .cheek-blush {
+            position: absolute;
+            width: 50px;
+            height: 40px;
+            background: radial-gradient(circle, rgba(255, 181, 198, 0.7) 0%, rgba(255, 181, 198, 0.3) 70%);
+            border-radius: 50%;
+            top: 125px;
+            filter: blur(5px);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        .cheek-blush.left { left: 15px; }
+        .cheek-blush.right { right: 15px; }
+
+        .lips {
+            position: absolute;
+            width: 55px;
+            height: 24px;
+            background: linear-gradient(135deg, #ff6b9d 0%, #ff85b3 100%);
+            border-radius: 0 0 28px 28px;
+            bottom: 75px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 3px 10px rgba(255, 107, 157, 0.4);
+        }
+
+        .sparkles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .sparkle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: white;
+            border-radius: 50%;
+            animation: sparkle 2s ease-in-out infinite;
+        }
+
+        @keyframes sparkle {
+            0%, 100% { opacity: 0; transform: scale(0); }
+            50% { opacity: 1; transform: scale(1); }
+        }
+
+        .sparkle:nth-child(1) { top: 20%; left: 15%; animation-delay: 0s; }
+        .sparkle:nth-child(2) { top: 30%; right: 20%; animation-delay: 0.5s; }
+        .sparkle:nth-child(3) { top: 60%; left: 25%; animation-delay: 1s; }
+        .sparkle:nth-child(4) { top: 70%; right: 15%; animation-delay: 1.5s; }
+        .sparkle:nth-child(5) { top: 40%; left: 10%; animation-delay: 0.3s; }
+        .sparkle:nth-child(6) { top: 50%; right: 10%; animation-delay: 0.8s; }
+
+        .color-selector {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .color-option {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            border: 4px solid white;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .color-option::after {
+            content: '';
+            position: absolute;
+            inset: -8px;
+            border: 3px solid transparent;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .color-option.active::after {
+            border-color: #ff6b9d;
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+
+        .color-option.active {
+            box-shadow: 0 6px 20px rgba(255, 107, 157, 0.5);
+        }
+
+        .color-1 { background: linear-gradient(135deg, #ffb3c6 0%, #ff9db5 100%); }
+        .color-2 { background: linear-gradient(135deg, #ffd4b8 0%, #ffc4a3 100%); }
+        .color-3 { background: linear-gradient(135deg, #ffe0e8 0%, #ffd0dc 100%); }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            animation: fadeInUp 0.6s ease-out 0.4s backwards;
+        }
+
+        .button {
+            flex: 1;
+            padding: 18px;
+            border-radius: 28px;
+            font-size: 17px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: -0.3px;
+        }
+
+        .button-secondary {
+            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+            color: #666;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .button-primary {
+            background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);
+            color: white;
+            box-shadow: 0 4px 16px rgba(255, 107, 157, 0.3);
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .button:active {
+            transform: scale(0.95);
+        }
+
+        /* Success Modal */
+        .success-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: white;
+            padding: 40px;
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+            z-index: 1000;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            max-width: 320px;
+        }
+
+        .success-modal.show {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            margin: 0 auto 20px;
+            animation: successPop 0.6s ease-out;
+        }
+
+        @keyframes successPop {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .success-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2a2a2a;
+            margin-bottom: 10px;
+        }
+
+        .success-text {
+            font-size: 15px;
+            color: #888;
+            margin-bottom: 25px;
+        }
+
+        .modal-button {
+            background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(255, 107, 157, 0.3);
+            transition: all 0.2s;
+        }
+
+        .modal-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 157, 0.4);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .phone-frame {
+                max-width: 100%;
+                height: 90vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="phone-frame">
+            <div class="phone-notch">
+                <div class="camera"></div>
+            </div>
+
+            <div class="screen">
+                <!-- Screen 1: Mood Selection -->
+                <div class="screen-view active" id="screen1">
+                    <div class="header">
+                        <h1>How do you feel today?</h1>
+                        <div class="header-subtitle">Choose your mood to get personalized looks</div>
+                    </div>
+
+                    <div class="mood-grid">
+                        <div class="mood-card active" data-mood="cute">
+                            <div class="mood-icon">♥</div>
+                            <div class="mood-label">Cute</div>
+                        </div>
+
+                        <div class="mood-card" data-mood="cool">
+                            <div class="mood-icon">⚡</div>
+                            <div class="mood-label">Cool</div>
+                        </div>
+
+                        <div class="mood-card" data-mood="natural">
+                            <div class="mood-icon">🍃</div>
+                            <div class="mood-label">Natural</div>
+                        </div>
+
+                        <div class="mood-card" data-mood="night">
+                            <div class="mood-icon">🌙</div>
+                            <div class="mood-label">Night Out</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Screen 2: Recommended Looks -->
+                <div class="screen-view" id="screen2">
+                    <div class="header-bar">
+                        <div class="back-button" id="backBtn1">←</div>
+                        <h2 id="moodTitle">Recommended for Cute</h2>
+                    </div>
+
+                    <div class="carousel">
+                        <div class="look-card">
+                            <div class="face-preview">
+                                <div class="face-shape">
+                                    <div class="face-smile"></div>
+                                </div>
+                                <div class="preview-makeup">
+                                    <div class="preview-blush left"></div>
+                                    <div class="preview-blush right"></div>
+                                    <div class="preview-lips"></div>
+                                </div>
+                            </div>
+
+                            <div class="color-swatches">
+                                <div class="swatch swatch-1"></div>
+                                <div class="swatch swatch-2"></div>
+                                <div class="swatch swatch-3"></div>
+                            </div>
+
+                            <div class="look-info">
+                                <div class="look-name" id="lookName">Soft Peach</div>
+                                <button class="try-button" id="tryBtn">Try in AR</button>
+                            </div>
+                        </div>
+
+                        <div class="pagination-dots">
+                            <div class="dot active"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Screen 3: AR Try-On -->
+                <div class="screen-view" id="screen3">
+                    <div class="ar-header">
+                        <div class="ar-title">Try in AR</div>
+                        <div class="ar-subtitle" id="arLookName">Soft Peach</div>
+                    </div>
+
+                    <div class="camera-view">
+                        <div class="camera-face"></div>
+                        <div class="makeup-overlay">
+                            <div class="cheek-blush left"></div>
+                            <div class="cheek-blush right"></div>
+                            <div class="lips"></div>
+                        </div>
+
+                        <div class="sparkles">
+                            <div class="sparkle"></div>
+                            <div class="sparkle"></div>
+                            <div class="sparkle"></div>
+                            <div class="sparkle"></div>
+                            <div class="sparkle"></div>
+                            <div class="sparkle"></div>
+                        </div>
+
+                        <div class="color-selector">
+                            <div class="color-option color-1 active" data-color="1"></div>
+                            <div class="color-option color-2" data-color="2"></div>
+                            <div class="color-option color-3" data-color="3"></div>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="button button-secondary" id="backBtn2">Back</button>
+                        <button class="button button-primary" id="saveBtn">Save Look</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal-overlay" id="modalOverlay"></div>
+    <div class="success-modal" id="successModal">
+        <div class="success-icon">✓</div>
+        <div class="success-title">Look Saved!</div>
+        <div class="success-text">Your beautiful makeup look has been saved to your collection.</div>
+        <button class="modal-button" id="modalBtn">Awesome!</button>
+    </div>
+
+    <script>
+        // Audio Context for sound effects
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        // Sound effect functions
+        function playSound(frequency, duration, type = 'sine', volume = 0.3) {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.frequency.value = frequency;
+            oscillator.type = type;
+
+            gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration);
+        }
+
+        function playClickSound() {
+            playSound(800, 0.1, 'sine', 0.2);
+        }
+
+        function playSuccessSound() {
+            playSound(523.25, 0.15, 'sine', 0.25);
+            setTimeout(() => playSound(659.25, 0.15, 'sine', 0.25), 100);
+            setTimeout(() => playSound(783.99, 0.3, 'sine', 0.25), 200);
+        }
+
+        function playTransitionSound() {
+            playSound(600, 0.15, 'sine', 0.15);
+            setTimeout(() => playSound(700, 0.15, 'sine', 0.15), 80);
+        }
+
+        function playHoverSound() {
+            playSound(1000, 0.05, 'sine', 0.1);
+        }
+
+        function playSaveSound() {
+            // Multi-tone success jingle
+            const notes = [523.25, 587.33, 659.25, 783.99];
+            notes.forEach((note, i) => {
+                setTimeout(() => playSound(note, 0.2, 'sine', 0.2), i * 100);
+            });
+        }
+
+        // Screen navigation
+        let currentScreen = 1;
+        let selectedMood = 'Cute';
+
+        const moodLooks = {
+            'Cute': 'Soft Peach',
+            'Cool': 'Bold Berry',
+            'Natural': 'Nude Glow',
+            'Night Out': 'Glam Shimmer'
+        };
+
+        function navigateToScreen(screenNumber) {
+            playTransitionSound();
+
+            const currentScreenEl = document.getElementById(`screen${currentScreen}`);
+            const nextScreenEl = document.getElementById(`screen${screenNumber}`);
+
+            currentScreenEl.classList.add('exiting');
+
+            setTimeout(() => {
+                currentScreenEl.classList.remove('active', 'exiting');
+                nextScreenEl.classList.add('active');
+                currentScreen = screenNumber;
+            }, 200);
+        }
+
+        // Mood card selection
+        document.querySelectorAll('.mood-card').forEach(card => {
+            card.addEventListener('click', function() {
+                playClickSound();
+
+                document.querySelectorAll('.mood-card').forEach(c => c.classList.remove('active'));
+                this.classList.add('active');
+
+                const mood = this.querySelector('.mood-label').textContent;
+                selectedMood = mood;
+
+                setTimeout(() => {
+                    navigateToScreen(2);
+                    document.getElementById('moodTitle').textContent = `Recommended for ${mood}`;
+                    const lookName = moodLooks[mood];
+                    document.getElementById('lookName').textContent = lookName;
+                    document.getElementById('arLookName').textContent = lookName;
+                }, 300);
+            });
+
+            card.addEventListener('mouseenter', () => playHoverSound());
+        });
+
+        // Try in AR button
+        document.getElementById('tryBtn').addEventListener('click', function() {
+            playClickSound();
+            setTimeout(() => navigateToScreen(3), 100);
+        });
+
+        document.getElementById('tryBtn').addEventListener('mouseenter', () => playHoverSound());
+
+        // Back buttons
+        document.getElementById('backBtn1').addEventListener('click', function() {
+            playClickSound();
+            navigateToScreen(1);
+        });
+
+        document.getElementById('backBtn2').addEventListener('click', function() {
+            playClickSound();
+            navigateToScreen(2);
+        });
+
+        document.querySelectorAll('.back-button').forEach(btn => {
+            btn.addEventListener('mouseenter', () => playHoverSound());
+        });
+
+        // Color selector
+        document.querySelectorAll('.color-option').forEach(option => {
+            option.addEventListener('click', function() {
+                playClickSound();
+                document.querySelectorAll('.color-option').forEach(o => o.classList.remove('active'));
+                this.classList.add('active');
+            });
+
+            option.addEventListener('mouseenter', () => playHoverSound());
+        });
+
+        // Swatches
+        document.querySelectorAll('.swatch').forEach(swatch => {
+            swatch.addEventListener('click', () => playClickSound());
+            swatch.addEventListener('mouseenter', () => playHoverSound());
+        });
+
+        // Pagination dots
+        document.querySelectorAll('.dot').forEach((dot, index) => {
+            dot.addEventListener('click', function() {
+                playClickSound();
+                document.querySelectorAll('.dot').forEach(d => d.classList.remove('active'));
+                this.classList.add('active');
+            });
+
+            dot.addEventListener('mouseenter', () => playHoverSound());
+        });
+
+        // Save button with modal
+        document.getElementById('saveBtn').addEventListener('click', function() {
+            playSaveSound();
+            document.getElementById('modalOverlay').classList.add('show');
+            document.getElementById('successModal').classList.add('show');
+        });
+
+        document.getElementById('saveBtn').addEventListener('mouseenter', () => playHoverSound());
+
+        // Modal close
+        document.getElementById('modalBtn').addEventListener('click', function() {
+            playClickSound();
+            document.getElementById('modalOverlay').classList.remove('show');
+            document.getElementById('successModal').classList.remove('show');
+
+            setTimeout(() => navigateToScreen(1), 300);
+        });
+
+        document.getElementById('modalBtn').addEventListener('mouseenter', () => playHoverSound());
+
+        document.getElementById('modalOverlay').addEventListener('click', function() {
+            document.getElementById('modalOverlay').classList.remove('show');
+            document.getElementById('successModal').classList.remove('show');
+        });
+
+        // Add hover sound to all buttons
+        document.querySelectorAll('.button').forEach(btn => {
+            btn.addEventListener('mouseenter', () => playHoverSound());
+        });
+    </script>
+</body>
+</html>
