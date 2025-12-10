@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snip & Style - The Wacky Hair Salon Game! 💇</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', 'Segoe UI', cursive, sans-serif;
+            overflow: hidden;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            height: 100vh;
+            width: 100vw;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #salon-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+        }
+
+        /* Funny Commentary Bubble */
+        #commentary {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px 40px;
+            border-radius: 50px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff6b9d;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 200;
+            max-width: 80%;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        #commentary.show {
+            opacity: 1;
+        }
+
+        /* Customer Face Reaction */
+        #customer-reaction {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 120px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 150;
+            text-shadow: 0 0 20px rgba(255,255,255,0.8);
+        }
+
+        #customer-reaction.show {
+            opacity: 1;
+            animation: bounce 0.5s ease;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.3); }
+        }
+
+        /* Start Screen */
+        #start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 300;
+            transition: opacity 0.5s;
+        }
+
+        #start-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .game-title {
+            font-size: 72px;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 40px rgba(255,255,255,0.8);
+            margin-bottom: 20px;
+            animation: rainbow 3s infinite;
+        }
+
+        @keyframes rainbow {
+            0% { color: #ff6b9d; }
+            25% { color: #ffd700; }
+            50% { color: #48dbfb; }
+            75% { color: #ff9ff3; }
+            100% { color: #ff6b9d; }
+        }
+
+        .subtitle {
+            font-size: 28px;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 40px;
+        }
+
+        .start-btn {
+            padding: 20px 60px;
+            font-size: 24px;
+            font-weight: 700;
+            color: #fff;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 40px rgba(240,147,251,0.5);
+            text-transform: uppercase;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 60px rgba(240,147,251,0.8);
+        }
+
+        /* Tools Panel */
+        #tools-panel {
+            position: absolute;
+            left: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 100;
+        }
+
+        .tool-btn {
+            width: 100px;
+            height: 100px;
+            background: rgba(255,255,255,0.9);
+            border: 4px solid transparent;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .tool-btn:hover {
+            transform: scale(1.1);
+            background: rgba(255,255,255,1);
+        }
+
+        .tool-btn.active {
+            border-color: #f093fb;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            box-shadow: 0 0 30px rgba(240,147,251,0.8);
+        }
+
+        .tool-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #333;
+            margin-top: 5px;
+        }
+
+        .tool-btn.active .tool-label {
+            color: #fff;
+        }
+
+        /* Color Palette */
+        #color-palette {
+            position: absolute;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            z-index: 100;
+        }
+
+        .color-swatch {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 5px solid transparent;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .color-swatch:hover {
+            transform: scale(1.15);
+        }
+
+        .color-swatch.active {
+            border-color: #fff;
+            box-shadow: 0 0 30px rgba(255,255,255,0.9);
+        }
+
+        /* Action Buttons */
+        #action-buttons {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+            z-index: 100;
+        }
+
+        .action-btn {
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+            background: rgba(0,0,0,0.5);
+            border: 2px solid rgba(255,255,255,0.5);
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .action-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.05);
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, #4ade80 0%, #16a34a 100%);
+            border-color: #fff;
+        }
+
+        /* Hair Length Indicator */
+        #hair-length {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            background: rgba(255,255,255,0.9);
+            padding: 15px 30px;
+            border-radius: 20px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: 100;
+        }
+
+        /* Completion Screen */
+        #completion-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 250;
+        }
+
+        #completion-screen.show {
+            display: flex;
+        }
+
+        .completion-title {
+            font-size: 64px;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 40px rgba(255,255,255,0.8);
+            margin-bottom: 30px;
+        }
+
+        .rating-stars {
+            font-size: 80px;
+            margin-bottom: 30px;
+        }
+
+        .customer-feedback {
+            font-size: 32px;
+            color: #fff;
+            margin-bottom: 40px;
+            text-align: center;
+            max-width: 600px;
+            line-height: 1.4;
+        }
+
+        /* Flying Hair Clippings */
+        .hair-clip {
+            position: absolute;
+            width: 20px;
+            height: 30px;
+            background: linear-gradient(135deg, #654321 0%, #432818 100%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 50;
+            animation: fall 2s ease-out forwards;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(500px) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* Sparkles for styling */
+        .sparkle {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background: radial-gradient(circle, #ffd700, transparent);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 50;
+            animation: sparkle-anim 1s ease-out forwards;
+        }
+
+        @keyframes sparkle-anim {
+            0% {
+                transform: scale(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(2) rotate(180deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="salon-canvas"></canvas>
+
+        <!-- Start Screen -->
+        <div id="start-screen">
+            <div class="game-title">✂️ Snip & Style ✂️</div>
+            <div class="subtitle">The World's Wackiest Hair Salon!</div>
+            <button class="start-btn" onclick="startGame()">Let's Get Styling!</button>
+        </div>
+
+        <!-- Commentary Bubble -->
+        <div id="commentary"></div>
+
+        <!-- Customer Reaction -->
+        <div id="customer-reaction"></div>
+
+        <!-- Hair Length Indicator -->
+        <div id="hair-length">Hair Length: 100%</div>
+
+        <!-- Tools Panel -->
+        <div id="tools-panel">
+            <div class="tool-btn active" data-tool="scissors" onclick="selectTool('scissors', this)">
+                <div>✂️</div>
+                <div class="tool-label">Scissors</div>
+            </div>
+            <div class="tool-btn" data-tool="clippers" onclick="selectTool('clippers', this)">
+                <div>🪒</div>
+                <div class="tool-label">Clippers</div>
+            </div>
+            <div class="tool-btn" data-tool="dye" onclick="selectTool('dye', this)">
+                <div>🎨</div>
+                <div class="tool-label">Hair Dye</div>
+            </div>
+            <div class="tool-btn" data-tool="curler" onclick="selectTool('curler', this)">
+                <div>🌀</div>
+                <div class="tool-label">Curler</div>
+            </div>
+            <div class="tool-btn" data-tool="straightener" onclick="selectTool('straightener', this)">
+                <div>📏</div>
+                <div class="tool-label">Straighten</div>
+            </div>
+            <div class="tool-btn" data-tool="spray" onclick="selectTool('spray', this)">
+                <div>✨</div>
+                <div class="tool-label">Hairspray</div>
+            </div>
+        </div>
+
+        <!-- Color Palette -->
+        <div id="color-palette">
+            <div class="color-swatch active" style="background: #654321" onclick="selectColor('#654321', this)"></div>
+            <div class="color-swatch" style="background: #ffd700" onclick="selectColor('#ffd700', this)"></div>
+            <div class="color-swatch" style="background: #ff6b9d" onclick="selectColor('#ff6b9d', this)"></div>
+            <div class="color-swatch" style="background: #9370db" onclick="selectColor('#9370db', this)"></div>
+            <div class="color-swatch" style="background: #00ced1" onclick="selectColor('#00ced1', this)"></div>
+            <div class="color-swatch" style="background: #ff4500" onclick="selectColor('#ff4500', this)"></div>
+            <div class="color-swatch" style="background: #32cd32" onclick="selectColor('#32cd32', this)"></div>
+            <div class="color-swatch" style="background: #000000" onclick="selectColor('#000000', this)"></div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div id="action-buttons">
+            <button class="action-btn" onclick="undoAction()">Undo</button>
+            <button class="action-btn" onclick="resetHair()">Reset Hair</button>
+            <button class="action-btn primary" onclick="finishStyling()">Finish & Show!</button>
+        </div>
+
+        <!-- Completion Screen -->
+        <div id="completion-screen">
+            <div class="completion-title">✨ Fabulous! ✨</div>
+            <div class="rating-stars" id="rating-stars">⭐⭐⭐⭐⭐</div>
+            <div class="customer-feedback" id="customer-feedback"></div>
+            <button class="start-btn" onclick="newCustomer()">Next Customer!</button>
+        </div>
+    </div>
+
+    <script>
+        // ===========================
+        // GAME STATE
+        // ===========================
+        const gameState = {
+            currentTool: 'scissors',
+            currentColor: '#654321',
+            hairLength: 100,
+            isDrawing: false,
+            mousePos: { x: 0, y: 0 },
+            actionHistory: [],
+            customerIndex: 0,
+            totalCuts: 0,
+            hairCurly: 0, // 0 = straight, 100 = very curly
+            hairShine: 50
+        };
+
+        // Funny customer names and comments
+        const customers = [
+            { name: "Bob", wantsCrazy: true },
+            { name: "Karen", wantsPerfection: true },
+            { name: "Chad", wantsMullet: true },
+            { name: "Tiffany", wantsColorful: true },
+            { name: "Grandpa Joe", wantsSimple: true }
+        ];
+
+        const funnyComments = {
+            cutting: [
+                "Ooh, getting shorter! 💇",
+                "Snip snip! Looking good!",
+                "Easy there, tiger! 😅",
+                "That's quite the trim!",
+                "My ears are still there, right? 👂"
+            ],
+            clipping: [
+                "BZZZZZZ! That tickles! 😂",
+                "Going for the buzz cut, eh?",
+                "So bald, so beautiful! ✨",
+                "I can feel the breeze already!",
+                "Channeling my inner monk! 🧘"
+            ],
+            dyeing: [
+                "Ooh, funky color! 🌈",
+                "This is wild! I love it!",
+                "My mom's gonna freak! 😱",
+                "Rainbow hair, don't care! 🦄",
+                "Is this reversible? ...Just kidding!"
+            ],
+            curling: [
+                "Getting curly with it! 🌀",
+                "Ringlets for days!",
+                "Bouncy bouncy! Sproiiing!",
+                "I look like a poodle! Woof! 🐩",
+                "The 80s called, they want their perm back!"
+            ],
+            straightening: [
+                "Smooth as silk! 💆",
+                "Flat and fabulous!",
+                "Goodbye frizz, hello sleek!",
+                "I'm too smooth for this salon!",
+                "Straighten up and fly right! ✈️"
+            ],
+            spray: [
+                "Hold everything! Literally! 💨",
+                "*cough cough* Strong stuff!",
+                "Hairspray shield, ACTIVATE! 🛡️",
+                "This hair ain't moving in a hurricane!",
+                "Cemented for success! ✨"
+            ]
+        };
+
+        const completionComments = {
+            awesome: [
+                "OMG! I look AMAZING! This is exactly what I wanted! 🤩",
+                "You're a hair WIZARD! Absolutely perfect! 🧙‍♂️",
+                "I've never looked this good in my LIFE! 💯",
+                "This is FIRE! 🔥 You should be in magazines!",
+                "Take my money! This is PERFECTION! 💰"
+            ],
+            good: [
+                "Not bad! I'm digging the vibe! 😊",
+                "Yeah, this works! I like it!",
+                "Pretty good! I'll tell my friends about you!",
+                "Solid work! I'm satisfied! 👍",
+                "This'll do nicely! Thanks!"
+            ],
+            okay: [
+                "Hmm... interesting choice... 🤔",
+                "Well, it's... different!",
+                "I guess this is what I asked for?",
+                "Not exactly what I pictured, but okay!",
+                "It's... unique! Yeah, unique! 😅"
+            ],
+            bad: [
+                "Um... what happened here? 😬",
+                "This is NOT what I asked for!",
+                "I look like I lost a fight with a lawnmower! 🤦",
+                "Can I get a refund? And a hat? 🎩",
+                "I'm never leaving my house again! 😭"
+            ]
+        };
+
+        // ===========================
+        // CANVAS SETUP
+        // ===========================
+        const canvas = document.getElementById('salon-canvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            drawScene();
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // ===========================
+        // DRAWING FUNCTIONS
+        // ===========================
+        function drawScene() {
+            // Background
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, '#ffecd2');
+            gradient.addColorStop(1, '#fcb69f');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Salon chair
+            drawSalonChair();
+
+            // Customer
+            drawCustomer();
+        }
+
+        function drawSalonChair() {
+            const centerX = canvas.width / 2;
+            const bottomY = canvas.height - 50;
+
+            // Chair seat
+            ctx.fillStyle = '#8b4513';
+            ctx.fillRect(centerX - 150, bottomY - 100, 300, 20);
+
+            // Chair back
+            ctx.fillRect(centerX - 120, bottomY - 300, 20, 200);
+
+            // Chair base
+            ctx.fillRect(centerX - 30, bottomY - 100, 60, 100);
+
+            // Chrome pole
+            const poleGradient = ctx.createLinearGradient(centerX - 15, 0, centerX + 15, 0);
+            poleGradient.addColorStop(0, '#aaa');
+            poleGradient.addColorStop(0.5, '#fff');
+            poleGradient.addColorStop(1, '#aaa');
+            ctx.fillStyle = poleGradient;
+            ctx.fillRect(centerX - 15, bottomY - 100, 30, 100);
+        }
+
+        function drawCustomer() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+
+            // Head
+            ctx.fillStyle = '#f5d5c8';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 120, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Face features
+            // Eyes
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(centerX - 40, centerY - 20, 15, 0, Math.PI * 2);
+            ctx.arc(centerX + 40, centerY - 20, 15, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(centerX - 40, centerY - 20, 8, 0, Math.PI * 2);
+            ctx.arc(centerX + 40, centerY - 20, 8, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Nose
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY - 10);
+            ctx.lineTo(centerX, centerY + 20);
+            ctx.stroke();
+
+            // Mouth (happy or varied based on actions)
+            ctx.beginPath();
+            ctx.arc(centerX, centerY + 30, 30, 0, Math.PI);
+            ctx.stroke();
+
+            // HAIR!
+            drawHair(centerX, centerY);
+
+            // Body
+            ctx.fillStyle = '#3498db';
+            ctx.fillRect(centerX - 100, centerY + 120, 200, 200);
+
+            // Salon cape
+            ctx.fillStyle = 'rgba(0,0,0,0.2)';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY + 120, 150, 0, Math.PI);
+            ctx.fill();
+        }
+
+        function drawHair(centerX, centerY) {
+            const hairLengthMultiplier = gameState.hairLength / 100;
+            const curliness = gameState.hairCurly / 100;
+
+            ctx.save();
+            ctx.fillStyle = gameState.currentColor;
+
+            if (gameState.hairCurly > 50) {
+                // Curly hair
+                drawCurlyHair(centerX, centerY, hairLengthMultiplier);
+            } else {
+                // Straight hair
+                drawStraightHair(centerX, centerY, hairLengthMultiplier);
+            }
+
+            // Add shine effect
+            if (gameState.hairShine > 50) {
+                ctx.globalAlpha = (gameState.hairShine - 50) / 100;
+                const shineGradient = ctx.createRadialGradient(
+                    centerX - 30, centerY - 100, 10,
+                    centerX, centerY - 80, 60
+                );
+                shineGradient.addColorStop(0, 'rgba(255,255,255,0.8)');
+                shineGradient.addColorStop(1, 'transparent');
+                ctx.fillStyle = shineGradient;
+                ctx.fillRect(centerX - 80, centerY - 150, 160, 100);
+            }
+
+            ctx.restore();
+        }
+
+        function drawStraightHair(centerX, centerY, lengthMultiplier) {
+            const baseLength = 200 * lengthMultiplier;
+
+            // Hair top (covers head)
+            ctx.beginPath();
+            ctx.ellipse(centerX, centerY - 100, 130, 50, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Hair sides
+            ctx.beginPath();
+            ctx.ellipse(centerX - 80, centerY - 50, 40, baseLength / 2, 0, 0, Math.PI * 2);
+            ctx.ellipse(centerX + 80, centerY - 50, 40, baseLength / 2, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Hair back
+            ctx.beginPath();
+            ctx.ellipse(centerX, centerY - 20, 90, baseLength / 2.5, 0, 0, Math.PI);
+            ctx.fill();
+        }
+
+        function drawCurlyHair(centerX, centerY, lengthMultiplier) {
+            const numCurls = 20;
+            const baseRadius = 30;
+
+            for (let i = 0; i < numCurls; i++) {
+                const angle = (Math.PI * 2 / numCurls) * i;
+                const distance = 100 + (Math.random() * 30);
+                const x = centerX + Math.cos(angle) * distance;
+                const y = centerY - 80 + Math.sin(angle) * distance * 0.5;
+
+                ctx.beginPath();
+                ctx.arc(x, y, baseRadius * lengthMultiplier, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Draw curly spiral
+                if (lengthMultiplier > 0.5) {
+                    for (let j = 0; j < 3; j++) {
+                        const offsetY = y + (j * 20 * lengthMultiplier);
+                        const offsetX = x + (Math.sin(j) * 10);
+                        ctx.beginPath();
+                        ctx.arc(offsetX, offsetY, baseRadius * 0.8 * lengthMultiplier, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            }
+        }
+
+        // ===========================
+        // TOOL SELECTION
+        // ===========================
+        function selectTool(tool, element) {
+            gameState.currentTool = tool;
+            document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+            element.classList.add('active');
+            playSound('click');
+        }
+
+        function selectColor(color, element) {
+            gameState.currentColor = color;
+            document.querySelectorAll('.color-swatch').forEach(sw => sw.classList.remove('active'));
+            element.classList.add('active');
+            playSound('click');
+        }
+
+        // ===========================
+        // DRAWING INTERACTION
+        // ===========================
+        canvas.addEventListener('mousedown', startAction);
+        canvas.addEventListener('mousemove', performAction);
+        canvas.addEventListener('mouseup', stopAction);
+        canvas.addEventListener('mouseleave', stopAction);
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            gameState.mousePos = { x: touch.clientX, y: touch.clientY };
+            startAction();
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            gameState.mousePos = { x: touch.clientX, y: touch.clientY };
+            performAction();
+        });
+
+        canvas.addEventListener('touchend', stopAction);
+
+        function startAction(e) {
+            gameState.isDrawing = true;
+            if (e) {
+                gameState.mousePos = { x: e.clientX, y: e.clientY };
+            }
+        }
+
+        function performAction(e) {
+            if (!gameState.isDrawing) return;
+
+            if (e) {
+                gameState.mousePos = { x: e.clientX, y: e.clientY };
+            }
+
+            const tool = gameState.currentTool;
+
+            switch(tool) {
+                case 'scissors':
+                    if (Math.random() > 0.7) {
+                        gameState.hairLength = Math.max(10, gameState.hairLength - 2);
+                        createHairClipping(gameState.mousePos.x, gameState.mousePos.y);
+                        showComment('cutting');
+                        playSound('snip');
+                    }
+                    break;
+
+                case 'clippers':
+                    if (Math.random() > 0.5) {
+                        gameState.hairLength = Math.max(5, gameState.hairLength - 5);
+                        createHairClipping(gameState.mousePos.x, gameState.mousePos.y);
+                        showComment('clipping');
+                        playSound('buzz');
+                    }
+                    break;
+
+                case 'dye':
+                    showComment('dyeing');
+                    playSound('splash');
+                    showReaction('🎨');
+                    break;
+
+                case 'curler':
+                    gameState.hairCurly = Math.min(100, gameState.hairCurly + 5);
+                    showComment('curling');
+                    playSound('sizzle');
+                    break;
+
+                case 'straightener':
+                    gameState.hairCurly = Math.max(0, gameState.hairCurly - 5);
+                    showComment('straightening');
+                    playSound('sizzle');
+                    break;
+
+                case 'spray':
+                    gameState.hairShine = Math.min(100, gameState.hairShine + 5);
+                    createSparkle(gameState.mousePos.x, gameState.mousePos.y);
+                    showComment('spray');
+                    playSound('spray');
+                    break;
+            }
+
+            updateHairLength();
+            drawScene();
+        }
+
+        function stopAction() {
+            gameState.isDrawing = false;
+        }
+
+        // ===========================
+        // EFFECTS
+        // ===========================
+        function createHairClipping(x, y) {
+            const clip = document.createElement('div');
+            clip.className = 'hair-clip';
+            clip.style.left = x + 'px';
+            clip.style.top = y + 'px';
+            clip.style.background = `linear-gradient(135deg, ${gameState.currentColor}, ${darkenColor(gameState.currentColor)})`;
+            document.getElementById('game-container').appendChild(clip);
+
+            setTimeout(() => clip.remove(), 2000);
+        }
+
+        function createSparkle(x, y) {
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    const sparkle = document.createElement('div');
+                    sparkle.className = 'sparkle';
+                    sparkle.style.left = (x + (Math.random() - 0.5) * 100) + 'px';
+                    sparkle.style.top = (y + (Math.random() - 0.5) * 100) + 'px';
+                    document.getElementById('game-container').appendChild(sparkle);
+
+                    setTimeout(() => sparkle.remove(), 1000);
+                }, i * 100);
+            }
+        }
+
+        function showComment(type) {
+            const comments = funnyComments[type];
+            const comment = comments[Math.floor(Math.random() * comments.length)];
+            const bubble = document.getElementById('commentary');
+            bubble.textContent = comment;
+            bubble.classList.add('show');
+
+            setTimeout(() => {
+                bubble.classList.remove('show');
+            }, 2000);
+        }
+
+        function showReaction(emoji) {
+            const reaction = document.getElementById('customer-reaction');
+            reaction.textContent = emoji;
+            reaction.classList.add('show');
+
+            setTimeout(() => {
+                reaction.classList.remove('show');
+            }, 1000);
+        }
+
+        function updateHairLength() {
+            document.getElementById('hair-length').textContent = `Hair Length: ${Math.round(gameState.hairLength)}%`;
+        }
+
+        // ===========================
+        // ACTIONS
+        // ===========================
+        function undoAction() {
+            // Simple undo - restore some hair
+            gameState.hairLength = Math.min(100, gameState.hairLength + 10);
+            gameState.hairCurly = Math.max(0, gameState.hairCurly - 10);
+            gameState.hairShine = Math.max(0, gameState.hairShine - 10);
+            drawScene();
+            updateHairLength();
+            playSound('click');
+        }
+
+        function resetHair() {
+            gameState.hairLength = 100;
+            gameState.hairCurly = 0;
+            gameState.hairShine = 50;
+            gameState.currentColor = '#654321';
+            drawScene();
+            updateHairLength();
+            playSound('whoosh');
+            showComment('cutting');
+        }
+
+        function finishStyling() {
+            const rating = calculateRating();
+            showCompletionScreen(rating);
+        }
+
+        function calculateRating() {
+            // Random rating based on actions
+            const score = Math.random() * 5;
+
+            if (score > 4.5) return { stars: 5, type: 'awesome' };
+            if (score > 3.5) return { stars: 4, type: 'good' };
+            if (score > 2.5) return { stars: 3, type: 'okay' };
+            return { stars: 2, type: 'bad' };
+        }
+
+        function showCompletionScreen(rating) {
+            const screen = document.getElementById('completion-screen');
+            const starsEl = document.getElementById('rating-stars');
+            const feedbackEl = document.getElementById('customer-feedback');
+
+            // Set stars
+            starsEl.textContent = '⭐'.repeat(rating.stars);
+
+            // Set feedback
+            const comments = completionComments[rating.type];
+            feedbackEl.textContent = comments[Math.floor(Math.random() * comments.length)];
+
+            screen.classList.add('show');
+            playSound('complete');
+
+            // Sparkle effect
+            for (let i = 0; i < 20; i++) {
+                setTimeout(() => {
+                    createSparkle(
+                        Math.random() * window.innerWidth,
+                        Math.random() * window.innerHeight
+                    );
+                }, i * 100);
+            }
+        }
+
+        function newCustomer() {
+            document.getElementById('completion-screen').classList.remove('show');
+            gameState.customerIndex = (gameState.customerIndex + 1) % customers.length;
+            resetHair();
+            playSound('whoosh');
+        }
+
+        // ===========================
+        // SOUND EFFECTS
+        // ===========================
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        function playSound(type) {
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            switch(type) {
+                case 'snip':
+                    oscillator.frequency.value = 800;
+                    oscillator.type = 'square';
+                    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.1);
+                    break;
+
+                case 'buzz':
+                    oscillator.frequency.value = 200;
+                    oscillator.type = 'sawtooth';
+                    gainNode.gain.value = 0.05;
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.2);
+                    break;
+
+                case 'splash':
+                    oscillator.frequency.value = 400;
+                    oscillator.type = 'sine';
+                    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.3);
+                    break;
+
+                case 'sizzle':
+                    oscillator.frequency.value = 600;
+                    oscillator.type = 'triangle';
+                    gainNode.gain.value = 0.08;
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.15);
+                    break;
+
+                case 'spray':
+                    oscillator.frequency.value = 3000;
+                    oscillator.type = 'sawtooth';
+                    gainNode.gain.value = 0.03;
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.5);
+                    break;
+
+                case 'click':
+                    oscillator.frequency.value = 1000;
+                    oscillator.type = 'sine';
+                    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.05);
+                    break;
+
+                case 'complete':
+                    [262, 330, 392, 523].forEach((freq, i) => {
+                        setTimeout(() => {
+                            const osc = audioCtx.createOscillator();
+                            const gain = audioCtx.createGain();
+                            osc.connect(gain);
+                            gain.connect(audioCtx.destination);
+                            osc.frequency.value = freq;
+                            osc.type = 'sine';
+                            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                            osc.start(audioCtx.currentTime);
+                            osc.stop(audioCtx.currentTime + 0.3);
+                        }, i * 150);
+                    });
+                    break;
+
+                case 'whoosh':
+                    oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.5);
+                    oscillator.type = 'sawtooth';
+                    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.5);
+                    break;
+            }
+        }
+
+        // ===========================
+        // UTILITIES
+        // ===========================
+        function darkenColor(color) {
+            const hex = color.replace('#', '');
+            const r = Math.max(0, parseInt(hex.substr(0, 2), 16) - 40);
+            const g = Math.max(0, parseInt(hex.substr(2, 2), 16) - 40);
+            const b = Math.max(0, parseInt(hex.substr(4, 2), 16) - 40);
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+
+        // ===========================
+        // GAME START
+        // ===========================
+        function startGame() {
+            document.getElementById('start-screen').classList.add('hidden');
+            drawScene();
+            playSound('whoosh');
+
+            // Show welcome message
+            setTimeout(() => {
+                const bubble = document.getElementById('commentary');
+                bubble.textContent = "Hi! I'm ready for a fabulous new look! 💇✨";
+                bubble.classList.add('show');
+                setTimeout(() => bubble.classList.remove('show'), 3000);
+            }, 500);
+        }
+
+        // ===========================
+        // INITIALIZE
+        // ===========================
+        window.addEventListener('load', () => {
+            console.log('✂️ Snip & Style - Hair Salon Game Ready! ✂️');
+        });
+    </script>
+</body>
+</html>
