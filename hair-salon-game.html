@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💇 互动美发沙龙游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 900px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .game-header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .game-header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+            font-size: 1.1em;
+        }
+
+        .score-item {
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 10px;
+        }
+
+        .game-screen {
+            padding: 40px;
+            min-height: 500px;
+        }
+
+        .scene {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .scene.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .scene-title {
+            font-size: 2em;
+            color: #764ba2;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .scene-description {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        .visual-display {
+            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 25px 0;
+            text-align: center;
+            position: relative;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .character {
+            position: relative;
+            width: 200px;
+            height: 300px;
+            margin: 0 auto;
+        }
+
+        .character-face {
+            width: 120px;
+            height: 140px;
+            background: #ffd4a3;
+            border-radius: 50% 50% 45% 45%;
+            position: absolute;
+            left: 40px;
+            top: 80px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .character-eyes {
+            position: absolute;
+            top: 50px;
+            left: 25px;
+            width: 70px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .eye {
+            width: 12px;
+            height: 12px;
+            background: #333;
+            border-radius: 50%;
+        }
+
+        .character-mouth {
+            position: absolute;
+            top: 90px;
+            left: 40px;
+            width: 40px;
+            height: 20px;
+            border: 3px solid #333;
+            border-top: none;
+            border-radius: 0 0 40px 40px;
+            transition: all 0.3s;
+        }
+
+        .character-mouth.happy {
+            border-radius: 0 0 40px 40px;
+        }
+
+        .character-mouth.sad {
+            border-radius: 40px 40px 0 0;
+            border-top: 3px solid #333;
+            border-bottom: none;
+            top: 80px;
+        }
+
+        .character-hair {
+            position: absolute;
+            top: 0;
+            left: 20px;
+            width: 160px;
+            height: 150px;
+            background: #4a2c2a;
+            border-radius: 50% 50% 0 0;
+            transition: all 0.5s;
+            z-index: 10;
+        }
+
+        .hair-long {
+            height: 200px !important;
+            border-radius: 50% 50% 40% 40% !important;
+        }
+
+        .hair-short {
+            height: 100px !important;
+        }
+
+        .hair-bob {
+            height: 140px !important;
+            border-radius: 50% 50% 45% 45% !important;
+        }
+
+        .hair-pixie {
+            height: 90px !important;
+            border-radius: 60% 60% 0 0 !important;
+        }
+
+        .hair-color-brown { background: #4a2c2a !important; }
+        .hair-color-blonde { background: #f4d03f !important; }
+        .hair-color-black { background: #1a1a1a !important; }
+        .hair-color-red { background: #c0392b !important; }
+        .hair-color-purple { background: #8e44ad !important; }
+        .hair-color-pink { background: #ff69b4 !important; }
+        .hair-color-blue { background: #3498db !important; }
+
+        .hair-style-wavy::after {
+            content: '〰️〰️〰️';
+            position: absolute;
+            bottom: -20px;
+            left: 20px;
+            font-size: 2em;
+        }
+
+        .hair-style-curly::after {
+            content: '🌀🌀🌀';
+            position: absolute;
+            bottom: -20px;
+            left: 20px;
+        }
+
+        .hair-style-straight {
+            background-image: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.1) 100%);
+        }
+
+        .emotion-indicator {
+            position: absolute;
+            top: -40px;
+            right: 20px;
+            font-size: 3em;
+            animation: bounce 0.5s ease;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .status-text {
+            margin-top: 20px;
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #764ba2;
+        }
+
+        .choices {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .choice-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 20px;
+            border-radius: 15px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .choice-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        .choice-btn:active {
+            transform: translateY(-2px);
+        }
+
+        .choice-btn.correct {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .choice-btn.wrong {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+        }
+
+        .result-message {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            font-size: 1.2em;
+            text-align: center;
+            animation: slideIn 0.5s ease;
+        }
+
+        .result-message.success {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+
+        .result-message.failure {
+            background: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .continue-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 1.2em;
+            cursor: pointer;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+
+        .continue-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        .final-result {
+            text-align: center;
+        }
+
+        .final-score {
+            font-size: 3em;
+            color: #764ba2;
+            margin: 20px 0;
+        }
+
+        .rating {
+            font-size: 4em;
+            margin: 20px 0;
+        }
+
+        .salon-background {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .tools {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+            font-size: 2em;
+        }
+
+        .progress-bar {
+            background: #e0e0e0;
+            height: 10px;
+            border-radius: 5px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            transition: width 0.5s;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <h1>💇 美发沙龙大师 💇‍♀️</h1>
+            <div class="score-board">
+                <div class="score-item">
+                    <span>⭐ 分数: <span id="score">0</span></span>
+                </div>
+                <div class="score-item">
+                    <span>😊 满意度: <span id="satisfaction">100</span>%</span>
+                </div>
+                <div class="score-item">
+                    <span>📍 步骤: <span id="step">0</span>/7</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-screen">
+            <!-- Scene 1: Welcome -->
+            <div class="scene active" id="scene-welcome">
+                <h2 class="scene-title">🏪 欢迎来到梦幻美发沙龙</h2>
+                <div class="scene-description">
+                    你是一位新晋发型师！今天有位重要客户来到你的沙龙。她想要一个完美的新发型参加今晚的重要活动。<br>
+                    <strong>你的任务：</strong>通过正确的操作让客户满意，获得五星好评！
+                </div>
+                <div class="salon-background">
+                    <div style="text-align: center; font-size: 5em;">💈 ✨ 💇‍♀️ ✨ 💈</div>
+                    <p style="text-align: center; margin-top: 20px; font-size: 1.2em;">
+                        专业美发工具齐全 | 经验丰富的发型师 | 100%满意保证
+                    </p>
+                </div>
+                <div class="choices">
+                    <button class="choice-btn" onclick="startGame()">🎮 开始游戏</button>
+                </div>
+            </div>
+
+            <!-- Scene 2: Choose Hairstyle -->
+            <div class="scene" id="scene-choose">
+                <h2 class="scene-title">📋 第一步：咨询发型</h2>
+                <div class="scene-description">
+                    客户走进沙龙，她看起来有些紧张。今晚她要参加一个重要的晚宴，需要一个优雅又时尚的发型。
+                </div>
+                <div class="visual-display">
+                    <div class="character">
+                        <div class="character-hair" id="hair"></div>
+                        <div class="character-face">
+                            <div class="character-eyes">
+                                <div class="eye"></div>
+                                <div class="eye"></div>
+                            </div>
+                            <div class="character-mouth" id="mouth"></div>
+                        </div>
+                    </div>
+                    <div class="emotion-indicator" id="emotion">😊</div>
+                    <div class="status-text" id="status">客户期待中...</div>
+                </div>
+                <div class="scene-description">
+                    <strong>💭 客户说：</strong>"我想要一个适合晚宴的发型，你有什么建议吗？"
+                </div>
+                <div class="choices">
+                    <button class="choice-btn" onclick="chooseHairstyle('bob', true)">
+                        💇‍♀️ 优雅波波头<br><small>经典又时尚</small>
+                    </button>
+                    <button class="choice-btn" onclick="chooseHairstyle('pixie', false)">
+                        ✂️ 超短精灵头<br><small>个性十足</small>
+                    </button>
+                    <button class="choice-btn" onclick="chooseHairstyle('long', true)">
+                        👸 长卷发造型<br><small>优雅迷人</small>
+                    </button>
+                    <button class="choice-btn" onclick="chooseHairstyle('short', false)">
+                        🎸 朋克短发<br><small>前卫大胆</small>
+                    </button>
+                </div>
+                <div id="choice-result"></div>
+            </div>
+
+            <!-- Scene 3: Cutting -->
+            <div class="scene" id="scene-cut">
+                <h2 class="scene-title">✂️ 第二步：剪发</h2>
+                <div class="scene-description">
+                    客户坐在美发椅上，你拿起剪刀准备开始。这是最关键的一步！
+                </div>
+                <div class="visual-display">
+                    <div class="tools">✂️ 💇‍♀️ 🪮</div>
+                    <div class="character">
+                        <div class="character-hair" id="hair-cut"></div>
+                        <div class="character-face">
+                            <div class="character-eyes">
+                                <div class="eye"></div>
+                                <div class="eye"></div>
+                            </div>
+                            <div class="character-mouth" id="mouth-cut"></div>
+                        </div>
+                    </div>
+                    <div class="emotion-indicator" id="emotion-cut">😊</div>
+                    <div class="status-text" id="status-cut">准备剪发...</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-cut" style="width: 0%"></div>
+                </div>
+                <div class="scene-description">
+                    <strong>选择你的剪发技巧：</strong>
+                </div>
+                <div class="choices">
+                    <button class="choice-btn" onclick="cutHair('careful', true)">
+                        🎯 仔细测量后剪<br><small>慢工出细活</small>
+                    </button>
+                    <button class="choice-btn" onclick="cutHair('fast', false)">
+                        ⚡ 快速大胆剪<br><small>速战速决</small>
+                    </button>
+                    <button class="choice-btn" onclick="cutHair('layers', true)">
+                        📐 分层次剪<br><small>专业技术</small>
+                    </button>
+                    <button class="choice-btn" onclick="cutHair('random', false)">
+                        🎲 凭感觉剪<br><small>艺术创作</small>
+                    </button>
+                </div>
+                <div id="cut-result"></div>
+            </div>
+
+            <!-- Scene 4: Washing -->
+            <div class="scene" id="scene-wash">
+                <h2 class="scene-title">🚿 第三步：洗发护理</h2>
+                <div class="scene-description">
+                    剪发完成！现在需要为客户洗头，选择合适的洗发产品很重要。
+                </div>
+                <div class="visual-display">
+                    <div class="tools">🚿 🧴 💆‍♀️ ✨</div>
+                    <div class="character">
+                        <div class="character-hair" id="hair-wash"></div>
+                        <div class="character-face">
+                            <div class="character-eyes">
+                                <div class="eye"></div>
+                                <div class="eye"></div>
+                            </div>
+                            <div class="character-mouth" id="mouth-wash"></div>
+                        </div>
+                    </div>
+                    <div class="emotion-indicator" id="emotion-wash">😊</div>
+                    <div class="status-text" id="status-wash">准备洗发...</div>
+                </div>
+                <div class="scene-description">
+                    <strong>💭 客户说：</strong>"我的头发有点干燥，需要保湿护理。"
+                </div>
+                <div class="choices">
+                    <button class="choice-btn" onclick="washHair('moisturizing', true)">
+                        💧 深层保湿洗发<br><small>滋润修护</small>
+                    </button>
+                    <button class="choice-btn" onclick="washHair('oil-control', false)">
+                        🌿 控油清爽洗发<br><small>深层清洁</small>
+                    </button>
+                    <button class="choice-btn" onclick="washHair('luxury', true)">
+                        ✨ 豪华SPA护理<br><small>顶级享受</small>
+                    </button>
+                    <button class="choice-btn" onclick="washHair('cheap', false)">
+                        💰 普通洗发<br><small>节省成本</small>
+                    </button>
+                </div>
+                <div id="wash-result"></div>
+            </div>
+
+            <!-- Scene 5: Coloring -->
+            <div class="scene" id="scene-color">
+                <h2 class="scene-title">🎨 第四步：染发</h2>
+                <div class="scene-description">
+                    洗发完成！客户想尝试一些颜色变化，但不要太夸张。
+                </div>
+                <div class="visual-display">
+                    <div class="tools">🎨 🖌️ 💈 ✨</div>
+                    <div class="character">
+                        <div class="character-hair" id="hair-color"></div>
+                        <div class="character-face">
+                            <div class="character-eyes">
+                                <div class="eye"></div>
+                                <div class="eye"></div>
+                            </div>
+                            <div class="character-mouth" id="mouth-color"></div>
+                        </div>
+                    </div>
+                    <div class="emotion-indicator" id="emotion-color">😊</div>
+                    <div class="status-text" id="status-color">选择颜色...</div>
+                </div>
+                <div class="scene-description">
+                    <strong>💭 客户说：</strong>"我想要优雅的颜色，适合晚宴的那种。"
+                </div>
+                <div class="choices">
+                    <button class="choice-btn" onclick="colorHair('brown', true)">
+                        🤎 温暖棕色<br><small>自然优雅</small>
+                    </button>
+                    <button class="choice-btn" onclick="colorHair('blue', false)">
+                        💙 梦幻蓝色<br><small>大胆前卫</small>
+                    </button>
+                    <button class="choice-btn" onclick="colorHair('blonde', true)">
+                        💛 蜂蜜金色<br><small>时尚亮眼</small>
+                    </button>
+                    <button class="choice-btn" onclick="colorHair('pink', false)">
+                        💖 樱花粉色<br><small>甜美可爱</small>
+                    </button>
+                </div>
+                <div id="color-result"></div>
+            </div>
+
+            <!-- Scene 6: Styling -->
+            <div class="scene" id="scene-style">
+                <h2 class="scene-title">💫 第五步：造型定型</h2>
+                <div class="scene-description">
+                    颜色完美！现在是最后的造型步骤，让发型更加精致。
+                </div>
+                <div class="visual-display">
+                    <div class="tools">💨 🔥 💇‍♀️ ✨</div>
+                    <div class="character">
+                        <div class="character-hair" id="hair-style"></div>
+                        <div class="character-face">
+                            <div class="character-eyes">
+                                <div class="eye"></div>
+                                <div class="eye"></div>
+                            </div>
+                            <div class="character-mouth" id="mouth-style"></div>
+                        </div>
+                    </div>
+                    <div class="emotion-indicator" id="emotion-style">😊</div>
+                    <div class="status-text" id="status-style">准备造型...</div>
+                </div>
+                <div class="scene-description">
+                    <strong>选择造型方式：</strong>
+                </div>
+                <div class="choices">
+                    <button class="choice-btn" onclick="styleHair('elegant', true)">
+                        👑 优雅大波浪<br><small>完美晚宴造型</small>
+                    </button>
+                    <button class="choice-btn" onclick="styleHair('messy', false)">
+                        🌪️ 凌乱蓬松感<br><small>慵懒风格</small>
+                    </button>
+                    <button class="choice-btn" onclick="styleHair('smooth', true)">
+                        ✨ 丝滑直顺<br><small>经典优雅</small>
+                    </button>
+                    <button class="choice-btn" onclick="styleHair('spiky', false)">
+                        ⚡ 朋克尖刺<br><small>个性张扬</small>
+                    </button>
+                </div>
+                <div id="style-result"></div>
+            </div>
+
+            <!-- Scene 7: Final Result -->
+            <div class="scene" id="scene-final">
+                <h2 class="scene-title">🎉 完成！查看最终成果</h2>
+                <div class="final-result">
+                    <div class="visual-display">
+                        <div class="character">
+                            <div class="character-hair" id="hair-final"></div>
+                            <div class="character-face">
+                                <div class="character-eyes">
+                                    <div class="eye"></div>
+                                    <div class="eye"></div>
+                                </div>
+                                <div class="character-mouth" id="mouth-final"></div>
+                            </div>
+                        </div>
+                        <div class="emotion-indicator" id="emotion-final">😊</div>
+                    </div>
+
+                    <div class="final-score">
+                        总分: <span id="final-score">0</span> 分
+                    </div>
+
+                    <div class="rating" id="rating">⭐⭐⭐⭐⭐</div>
+
+                    <div id="final-message" class="result-message"></div>
+
+                    <div class="scene-description" id="customer-feedback"></div>
+
+                    <div class="choices">
+                        <button class="choice-btn" onclick="restartGame()">
+                            🔄 再玩一次
+                        </button>
+                        <button class="choice-btn" onclick="shareResult()">
+                            📤 分享成绩
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        let gameState = {
+            score: 0,
+            satisfaction: 100,
+            step: 0,
+            totalSteps: 7,
+            choices: {
+                hairstyle: '',
+                cut: '',
+                wash: '',
+                color: '',
+                style: ''
+            },
+            hairClasses: ['hair-long']
+        };
+
+        // Initialize
+        function startGame() {
+            gameState = {
+                score: 0,
+                satisfaction: 100,
+                step: 1,
+                totalSteps: 7,
+                choices: {
+                    hairstyle: '',
+                    cut: '',
+                    wash: '',
+                    color: '',
+                    style: ''
+                },
+                hairClasses: ['hair-long', 'hair-color-brown']
+            };
+            updateScore();
+            showScene('scene-choose');
+        }
+
+        function showScene(sceneId) {
+            document.querySelectorAll('.scene').forEach(scene => {
+                scene.classList.remove('active');
+            });
+            document.getElementById(sceneId).classList.add('active');
+
+            // Update hair for each scene
+            if (sceneId.includes('scene-')) {
+                updateHairDisplay(sceneId);
+            }
+        }
+
+        function updateScore() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('satisfaction').textContent = gameState.satisfaction;
+            document.getElementById('step').textContent = gameState.step;
+        }
+
+        function updateHairDisplay(sceneId) {
+            const hairIds = ['hair', 'hair-cut', 'hair-wash', 'hair-color', 'hair-style', 'hair-final'];
+            hairIds.forEach(id => {
+                const hairElement = document.getElementById(id);
+                if (hairElement) {
+                    hairElement.className = 'character-hair ' + gameState.hairClasses.join(' ');
+                }
+            });
+        }
+
+        // Scene 2: Choose Hairstyle
+        function chooseHairstyle(style, isCorrect) {
+            gameState.choices.hairstyle = style;
+            gameState.step = 2;
+
+            const resultDiv = document.getElementById('choice-result');
+            const emotion = document.getElementById('emotion');
+            const mouth = document.getElementById('mouth');
+            const status = document.getElementById('status');
+
+            if (isCorrect) {
+                gameState.score += 20;
+                gameState.hairClasses = gameState.hairClasses.filter(c => !c.startsWith('hair-'));
+                gameState.hairClasses.push('hair-' + style);
+
+                emotion.textContent = '😊';
+                mouth.className = 'character-mouth happy';
+                status.textContent = '客户很满意这个建议！';
+
+                resultDiv.innerHTML = `
+                    <div class="result-message success">
+                        ✅ 太好了！客户喜欢这个发型建议！<br>
+                        <small>+20 分 | 专业的建议让客户更有信心</small>
+                    </div>
+                    <button class="continue-btn" onclick="proceedToCut()">继续 ➡️ 开始剪发</button>
+                `;
+            } else {
+                gameState.satisfaction -= 15;
+
+                emotion.textContent = '😟';
+                mouth.className = 'character-mouth sad';
+                status.textContent = '客户有些犹豫...';
+
+                resultDiv.innerHTML = `
+                    <div class="result-message failure">
+                        ⚠️ 客户对这个建议不太满意...<br>
+                        <small>满意度 -15% | 这个风格可能不太适合晚宴</small>
+                    </div>
+                    <button class="continue-btn" onclick="proceedToCut()">继续 ➡️ 开始剪发</button>
+                `;
+            }
+
+            updateScore();
+            updateHairDisplay('scene-choose');
+
+            // Disable all choice buttons
+            document.querySelectorAll('#scene-choose .choice-btn').forEach(btn => {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+            });
+        }
+
+        function proceedToCut() {
+            gameState.step = 3;
+            updateScore();
+            showScene('scene-cut');
+        }
+
+        // Scene 3: Cutting
+        function cutHair(technique, isCorrect) {
+            gameState.choices.cut = technique;
+            gameState.step = 3;
+
+            const resultDiv = document.getElementById('cut-result');
+            const emotion = document.getElementById('emotion-cut');
+            const mouth = document.getElementById('mouth-cut');
+            const status = document.getElementById('status-cut');
+            const progress = document.getElementById('progress-cut');
+
+            // Animate progress
+            let width = 0;
+            const interval = setInterval(() => {
+                if (width >= 100) {
+                    clearInterval(interval);
+                } else {
+                    width += 2;
+                    progress.style.width = width + '%';
+                }
+            }, 20);
+
+            if (isCorrect) {
+                gameState.score += 25;
+
+                setTimeout(() => {
+                    emotion.textContent = '🤩';
+                    mouth.className = 'character-mouth happy';
+                    status.textContent = '完美的剪发技术！';
+
+                    resultDiv.innerHTML = `
+                        <div class="result-message success">
+                            ✅ 完美！你的专业技术让发型层次分明！<br>
+                            <small>+25 分 | 客户对你的技术赞不绝口</small>
+                        </div>
+                        <button class="continue-btn" onclick="proceedToWash()">继续 ➡️ 洗发护理</button>
+                    `;
+                }, 2000);
+            } else {
+                gameState.satisfaction -= 20;
+                gameState.score -= 10;
+
+                setTimeout(() => {
+                    emotion.textContent = '😰';
+                    mouth.className = 'character-mouth sad';
+                    status.textContent = '哎呀，剪得不太对...';
+
+                    resultDiv.innerHTML = `
+                        <div class="result-message failure">
+                            ❌ 糟糕！剪发出现了失误...<br>
+                            <small>-10 分 | 满意度 -20% | 需要补救措施</small>
+                        </div>
+                        <button class="continue-btn" onclick="proceedToWash()">继续 ➡️ 尝试补救</button>
+                    `;
+                }, 2000);
+            }
+
+            updateScore();
+
+            // Disable all choice buttons
+            document.querySelectorAll('#scene-cut .choice-btn').forEach(btn => {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+            });
+        }
+
+        function proceedToWash() {
+            gameState.step = 4;
+            updateScore();
+            showScene('scene-wash');
+        }
+
+        // Scene 4: Washing
+        function washHair(product, isCorrect) {
+            gameState.choices.wash = product;
+
+            const resultDiv = document.getElementById('wash-result');
+            const emotion = document.getElementById('emotion-wash');
+            const mouth = document.getElementById('mouth-wash');
+            const status = document.getElementById('status-wash');
+
+            if (isCorrect) {
+                gameState.score += 20;
+                if (gameState.satisfaction < 100) {
+                    gameState.satisfaction += 10; // 补救一些满意度
+                }
+
+                emotion.textContent = '😌';
+                mouth.className = 'character-mouth happy';
+                status.textContent = '好舒服的洗发体验！';
+
+                resultDiv.innerHTML = `
+                    <div class="result-message success">
+                        ✅ 完美的护理！客户的头发变得柔顺有光泽！<br>
+                        <small>+20 分 | 满意度 +10% | 专业的护理让客户很放松</small>
+                    </div>
+                    <button class="continue-btn" onclick="proceedToColor()">继续 ➡️ 染发环节</button>
+                `;
+            } else {
+                gameState.satisfaction -= 10;
+
+                emotion.textContent = '😕';
+                mouth.className = 'character-mouth sad';
+                status.textContent = '这个产品好像不太合适...';
+
+                resultDiv.innerHTML = `
+                    <div class="result-message failure">
+                        ⚠️ 产品选择不太合适...<br>
+                        <small>满意度 -10% | 没有解决客户的头发问题</small>
+                    </div>
+                    <button class="continue-btn" onclick="proceedToColor()">继续 ➡️ 染发环节</button>
+                `;
+            }
+
+            updateScore();
+
+            // Disable all choice buttons
+            document.querySelectorAll('#scene-wash .choice-btn').forEach(btn => {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+            });
+        }
+
+        function proceedToColor() {
+            gameState.step = 5;
+            updateScore();
+            showScene('scene-color');
+        }
+
+        // Scene 5: Coloring
+        function colorHair(color, isCorrect) {
+            gameState.choices.color = color;
+
+            const resultDiv = document.getElementById('color-result');
+            const emotion = document.getElementById('emotion-color');
+            const mouth = document.getElementById('mouth-color');
+            const status = document.getElementById('status-color');
+
+            // Update hair color
+            gameState.hairClasses = gameState.hairClasses.filter(c => !c.startsWith('hair-color-'));
+            gameState.hairClasses.push('hair-color-' + color);
+            updateHairDisplay('scene-color');
+
+            if (isCorrect) {
+                gameState.score += 25;
+
+                emotion.textContent = '🤩';
+                mouth.className = 'character-mouth happy';
+                status.textContent = '这个颜色太美了！';
+
+                resultDiv.innerHTML = `
+                    <div class="result-message success">
+                        ✅ 惊艳！这个颜色完美衬托客户的气质！<br>
+                        <small>+25 分 | 客户爱上了这个颜色</small>
+                    </div>
+                    <button class="continue-btn" onclick="proceedToStyle()">继续 ➡️ 最后造型</button>
+                `;
+            } else {
+                gameState.satisfaction -= 25;
+                gameState.score -= 15;
+
+                emotion.textContent = '😱';
+                mouth.className = 'character-mouth sad';
+                status.textContent = '这个颜色太夸张了...';
+
+                resultDiv.innerHTML = `
+                    <div class="result-message failure">
+                        ❌ 天哪！这个颜色太前卫了，不适合晚宴！<br>
+                        <small>-15 分 | 满意度 -25% | 客户很失望</small>
+                    </div>
+                    <button class="continue-btn" onclick="proceedToStyle()">继续 ➡️ 尝试补救</button>
+                `;
+            }
+
+            updateScore();
+
+            // Disable all choice buttons
+            document.querySelectorAll('#scene-color .choice-btn').forEach(btn => {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+            });
+        }
+
+        function proceedToStyle() {
+            gameState.step = 6;
+            updateScore();
+            showScene('scene-style');
+        }
+
+        // Scene 6: Styling
+        function styleHair(styleType, isCorrect) {
+            gameState.choices.style = styleType;
+            gameState.step = 7;
+
+            const resultDiv = document.getElementById('style-result');
+            const emotion = document.getElementById('emotion-style');
+            const mouth = document.getElementById('mouth-style');
+            const status = document.getElementById('status-style');
+
+            // Update hair style class
+            gameState.hairClasses = gameState.hairClasses.filter(c => !c.startsWith('hair-style-'));
+            gameState.hairClasses.push('hair-style-' + styleType);
+            updateHairDisplay('scene-style');
+
+            if (isCorrect) {
+                gameState.score += 30;
+                if (gameState.satisfaction < 100) {
+                    gameState.satisfaction += 15;
+                }
+
+                emotion.textContent = '😍';
+                mouth.className = 'character-mouth happy';
+                status.textContent = '完美的造型！';
+
+                resultDiv.innerHTML = `
+                    <div class="result-message success">
+                        ✅ 完美收官！造型优雅大方，完美配合晚宴！<br>
+                        <small>+30 分 | 满意度 +15% | 客户迫不及待想展示新发型</small>
+                    </div>
+                    <button class="continue-btn" onclick="showFinalResult()">查看最终成果 🎉</button>
+                `;
+            } else {
+                gameState.satisfaction -= 15;
+
+                emotion.textContent = '😐';
+                mouth.className = 'character-mouth';
+                status.textContent = '造型有点不搭配...';
+
+                resultDiv.innerHTML = `
+                    <div class="result-message failure">
+                        ⚠️ 造型风格与整体不太搭配...<br>
+                        <small>满意度 -15% | 虽然完成了，但不够完美</small>
+                    </div>
+                    <button class="continue-btn" onclick="showFinalResult()">查看最终成果</button>
+                `;
+            }
+
+            updateScore();
+
+            // Disable all choice buttons
+            document.querySelectorAll('#scene-style .choice-btn').forEach(btn => {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+            });
+        }
+
+        // Scene 7: Final Result
+        function showFinalResult() {
+            showScene('scene-final');
+            updateHairDisplay('scene-final');
+
+            const finalScore = gameState.score;
+            const satisfaction = gameState.satisfaction;
+
+            document.getElementById('final-score').textContent = finalScore;
+
+            const emotion = document.getElementById('emotion-final');
+            const mouth = document.getElementById('mouth-final');
+            const rating = document.getElementById('rating');
+            const message = document.getElementById('final-message');
+            const feedback = document.getElementById('customer-feedback');
+
+            let stars, messageText, feedbackText, messageClass;
+
+            if (finalScore >= 90 && satisfaction >= 80) {
+                stars = '⭐⭐⭐⭐⭐';
+                emotion.textContent = '🤩';
+                mouth.className = 'character-mouth happy';
+                messageText = '🏆 完美！你是真正的美发大师！';
+                feedbackText = '<strong>💭 客户反馈：</strong>"太完美了！这就是我梦想中的发型！我一定会推荐所有朋友来这里！你真是一位天才发型师！"';
+                messageClass = 'success';
+            } else if (finalScore >= 60 && satisfaction >= 60) {
+                stars = '⭐⭐⭐⭐';
+                emotion.textContent = '😊';
+                mouth.className = 'character-mouth happy';
+                messageText = '👍 很好！客户对结果满意';
+                feedbackText = '<strong>💭 客户反馈：</strong>"整体还不错，虽然有些小瑕疵，但我还是挺喜欢的。谢谢你的服务！"';
+                messageClass = 'success';
+            } else if (finalScore >= 30 && satisfaction >= 40) {
+                stars = '⭐⭐⭐';
+                emotion.textContent = '😐';
+                mouth.className = 'character-mouth';
+                messageText = '😐 还行，但还有进步空间';
+                feedbackText = '<strong>💭 客户反馈：</strong>"嗯...跟我想象的不太一样，但也还能接受。希望下次能做得更好。"';
+                messageClass = '';
+            } else {
+                stars = '⭐⭐';
+                emotion.textContent = '😞';
+                mouth.className = 'character-mouth sad';
+                messageText = '😞 需要更多练习';
+                feedbackText = '<strong>💭 客户反馈：</strong>"说实话，我有点失望...这个发型不太适合我。我可能需要去别的地方补救一下。"';
+                messageClass = 'failure';
+            }
+
+            rating.textContent = stars;
+            message.innerHTML = messageText;
+            message.className = 'result-message ' + messageClass;
+            feedback.innerHTML = feedbackText;
+        }
+
+        function restartGame() {
+            startGame();
+        }
+
+        function shareResult() {
+            const score = gameState.score;
+            const message = `我在美发沙龙游戏中获得了 ${score} 分！你能做得更好吗？🎮💇‍♀️`;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: '美发沙龙大师',
+                    text: message
+                }).catch(err => console.log('分享失败:', err));
+            } else {
+                alert(message + '\n\n(复制这段文字分享给朋友！)');
+            }
+        }
+    </script>
+</body>
+</html>
