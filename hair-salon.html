@@ -18,13 +18,47 @@
             background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
             height: 100vh;
             width: 100vw;
+            margin: 0;
+            padding: 0;
         }
 
         #game-container {
             position: relative;
             width: 100%;
             height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Main Game Area */
+        #main-game-area {
+            flex: 1;
+            display: flex;
             overflow: hidden;
+        }
+
+        /* Left Preview Zone */
+        #preview-zone {
+            width: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        #preview-box {
+            width: 100%;
+            max-width: 500px;
+            height: 100%;
+            max-height: 600px;
+            background: rgba(255, 255, 255, 0.3);
+            border: 4px solid rgba(255, 255, 255, 0.5);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
         }
 
         #salon-canvas {
@@ -34,6 +68,27 @@
             width: 100%;
             height: 100%;
             cursor: crosshair;
+        }
+
+        /* Right Tools Zone */
+        #tools-zone {
+            width: 200px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            overflow-y: auto;
+        }
+
+        .zone-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            text-align: center;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
         /* Funny Commentary Bubble */
@@ -149,132 +204,183 @@
         }
 
         /* Tools Panel */
-        #tools-panel {
-            position: absolute;
-            left: 30px;
-            top: 50%;
-            transform: translateY(-50%);
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            z-index: 100;
-        }
-
         .tool-btn {
-            width: 100px;
-            height: 100px;
+            width: 100%;
+            min-height: 70px;
             background: rgba(255,255,255,0.9);
-            border: 4px solid transparent;
-            border-radius: 20px;
+            border: 3px solid transparent;
+            border-radius: 15px;
             cursor: pointer;
             transition: all 0.3s;
             display: flex;
-            flex-direction: column;
             align-items: center;
-            justify-content: center;
-            font-size: 48px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            gap: 12px;
+            padding: 10px 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
 
         .tool-btn:hover {
-            transform: scale(1.1);
+            transform: translateX(-5px);
             background: rgba(255,255,255,1);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
         }
 
         .tool-btn.active {
             border-color: #f093fb;
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            box-shadow: 0 0 30px rgba(240,147,251,0.8);
+            box-shadow: 0 0 25px rgba(240,147,251,0.8);
+            transform: translateX(-10px);
+        }
+
+        .tool-icon {
+            font-size: 36px;
+            min-width: 40px;
+            text-align: center;
         }
 
         .tool-label {
-            font-size: 12px;
+            font-size: 14px;
             font-weight: 600;
             color: #333;
-            margin-top: 5px;
+            flex: 1;
         }
 
         .tool-btn.active .tool-label {
             color: #fff;
         }
 
-        /* Color Palette */
-        #color-palette {
-            position: absolute;
-            right: 30px;
-            top: 50%;
-            transform: translateY(-50%);
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            z-index: 100;
+        /* Bottom Status Bar */
+        #status-bar {
+            height: 120px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(15px);
+            border-top: 2px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            padding: 15px 30px;
+            gap: 30px;
+            overflow-x: auto;
         }
 
-        .color-swatch {
-            width: 70px;
-            height: 70px;
+        .status-item {
+            flex: 1;
+            min-width: 180px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .status-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.8);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .status-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 28px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 14px;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4ade80, #16a34a);
+            border-radius: 12px;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+
+        /* Mood Bar */
+        .mood-bar .progress-fill {
+            background: linear-gradient(90deg, #ef4444, #f59e0b, #22c55e);
+        }
+
+        .mood-bar .progress-fill[data-mood="high"] {
+            background: linear-gradient(90deg, #22c55e, #16a34a);
+        }
+
+        .mood-bar .progress-fill[data-mood="medium"] {
+            background: linear-gradient(90deg, #f59e0b, #eab308);
+        }
+
+        .mood-bar .progress-fill[data-mood="low"] {
+            background: linear-gradient(90deg, #ef4444, #dc2626);
+        }
+
+        /* Style/Color Indicator */
+        .indicator-box {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .color-preview {
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: 5px solid transparent;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
-
-        .color-swatch:hover {
-            transform: scale(1.15);
-        }
-
-        .color-swatch.active {
-            border-color: #fff;
-            box-shadow: 0 0 30px rgba(255,255,255,0.9);
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
 
         /* Action Buttons */
-        #action-buttons {
-            position: absolute;
-            bottom: 30px;
-            right: 30px;
+        .action-buttons-group {
             display: flex;
-            gap: 15px;
-            z-index: 100;
+            gap: 10px;
+            margin-left: auto;
+            flex-shrink: 0;
         }
 
         .action-btn {
-            padding: 15px 30px;
-            font-size: 18px;
+            padding: 10px 20px;
+            font-size: 13px;
             font-weight: 600;
             color: #fff;
             background: rgba(0,0,0,0.5);
             border: 2px solid rgba(255,255,255,0.5);
-            border-radius: 25px;
+            border-radius: 18px;
             cursor: pointer;
             transition: all 0.3s;
             backdrop-filter: blur(10px);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            white-space: nowrap;
         }
 
         .action-btn:hover {
             background: rgba(255,255,255,0.3);
+            border-color: #fff;
             transform: scale(1.05);
         }
 
         .action-btn.primary {
             background: linear-gradient(135deg, #4ade80 0%, #16a34a 100%);
             border-color: #fff;
-        }
-
-        /* Hair Length Indicator */
-        #hair-length {
-            position: absolute;
-            top: 30px;
-            right: 30px;
-            background: rgba(255,255,255,0.9);
-            padding: 15px 30px;
-            border-radius: 20px;
-            font-size: 18px;
-            font-weight: 600;
-            color: #333;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            z-index: 100;
         }
 
         /* Feedback Message */
@@ -485,12 +591,134 @@
                 opacity: 0;
             }
         }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            #preview-zone {
+                width: 60%;
+            }
+
+            #tools-zone {
+                width: 180px;
+            }
+
+            .tool-btn {
+                min-height: 60px;
+                padding: 8px 12px;
+            }
+
+            .tool-icon {
+                font-size: 30px;
+            }
+
+            .tool-label {
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            #main-game-area {
+                flex-direction: column;
+            }
+
+            #preview-zone {
+                width: 100%;
+                flex: 1;
+                padding: 15px;
+            }
+
+            #tools-zone {
+                width: 100%;
+                height: auto;
+                max-height: 150px;
+                flex-direction: row;
+                padding: 15px;
+                overflow-x: auto;
+                overflow-y: hidden;
+            }
+
+            .zone-title {
+                display: none;
+            }
+
+            .tool-btn {
+                min-width: 100px;
+                min-height: 80px;
+                flex-direction: column;
+                text-align: center;
+                justify-content: center;
+                gap: 6px;
+            }
+
+            .tool-btn:hover {
+                transform: translateY(-3px);
+            }
+
+            .tool-btn.active {
+                transform: translateY(-6px);
+            }
+
+            .tool-icon {
+                font-size: 32px;
+                min-width: auto;
+            }
+
+            #status-bar {
+                height: auto;
+                min-height: 100px;
+                padding: 12px 15px;
+                gap: 15px;
+                flex-wrap: wrap;
+            }
+
+            .status-item {
+                min-width: 140px;
+                flex: 0 0 calc(50% - 8px);
+            }
+
+            .action-buttons-group {
+                flex: 0 0 100%;
+                margin-left: 0;
+                justify-content: center;
+            }
+
+            .action-btn {
+                padding: 8px 16px;
+                font-size: 11px;
+            }
+
+            .scene-title { font-size: 36px; }
+            .scene-subtitle { font-size: 16px; }
+            .start-btn { padding: 15px 40px; font-size: 18px; }
+        }
+
+        @media (max-width: 480px) {
+            #status-bar {
+                padding: 10px 12px;
+            }
+
+            .status-item {
+                flex: 0 0 100%;
+                min-width: 100%;
+            }
+
+            .tool-btn {
+                min-width: 80px;
+                min-height: 70px;
+            }
+
+            .progress-bar {
+                height: 24px;
+            }
+
+            .progress-fill {
+                font-size: 11px;
+            }
+        }
     </style>
 </head>
 <body>
     <div id="game-container">
-        <canvas id="salon-canvas"></canvas>
-
         <!-- Start Screen -->
         <div id="start-screen">
             <div class="game-title">✂️ Snip & Style ✂️</div>
@@ -504,10 +732,7 @@
         <!-- Customer Reaction -->
         <div id="customer-reaction"></div>
 
-        <!-- Hair Length Indicator -->
-        <div id="hair-length">Hair Length: 100%</div>
-
-        <!-- Lock Indicator -->
+        <!-- Lock Indicator (floating) -->
         <div id="lock-indicator">🔒 Length Locked!</div>
 
         <!-- Feedback Message -->
@@ -530,51 +755,90 @@
             <button class="close-modal-btn" onclick="GameController.closeColorPicker()">Close</button>
         </div>
 
-        <!-- Tools Panel -->
-        <div id="tools-panel">
-            <div class="tool-btn active" data-tool="scissors" onclick="GameController.selectTool('scissors', this)">
-                <div>✂️</div>
-                <div class="tool-label">Scissors</div>
+        <!-- Main Game Area: Left Preview + Right Tools -->
+        <div id="main-game-area">
+            <!-- Left: Hair Preview Zone -->
+            <div id="preview-zone">
+                <div id="preview-box">
+                    <canvas id="salon-canvas"></canvas>
+                </div>
             </div>
-            <div class="tool-btn" data-tool="clippers" onclick="GameController.selectTool('clippers', this)">
-                <div>🪒</div>
-                <div class="tool-label">Clippers</div>
-            </div>
-            <div class="tool-btn" data-tool="dye" onclick="GameController.selectTool('dye', this)">
-                <div>🎨</div>
-                <div class="tool-label">Hair Dye</div>
-            </div>
-            <div class="tool-btn" data-tool="curler" onclick="GameController.selectTool('curler', this)">
-                <div>🌀</div>
-                <div class="tool-label">Curler</div>
-            </div>
-            <div class="tool-btn" data-tool="straightener" onclick="GameController.selectTool('straightener', this)">
-                <div>📏</div>
-                <div class="tool-label">Straighten</div>
-            </div>
-            <div class="tool-btn" data-tool="spray" onclick="GameController.selectTool('spray', this)">
-                <div>✨</div>
-                <div class="tool-label">Hairspray</div>
+
+            <!-- Right: Tools Zone -->
+            <div id="tools-zone">
+                <div class="zone-title">🛠️ TOOLS</div>
+                <div class="tool-btn active" data-tool="scissors" onclick="GameController.selectTool('scissors', this)">
+                    <div class="tool-icon">✂️</div>
+                    <div class="tool-label">Scissors</div>
+                </div>
+                <div class="tool-btn" data-tool="clippers" onclick="GameController.selectTool('clippers', this)">
+                    <div class="tool-icon">🪒</div>
+                    <div class="tool-label">Clippers</div>
+                </div>
+                <div class="tool-btn" data-tool="dye" onclick="GameController.selectTool('dye', this)">
+                    <div class="tool-icon">🎨</div>
+                    <div class="tool-label">Hair Dye</div>
+                </div>
+                <div class="tool-btn" data-tool="curler" onclick="GameController.selectTool('curler', this)">
+                    <div class="tool-icon">🌀</div>
+                    <div class="tool-label">Curler</div>
+                </div>
+                <div class="tool-btn" data-tool="straightener" onclick="GameController.selectTool('straightener', this)">
+                    <div class="tool-icon">📏</div>
+                    <div class="tool-label">Straighten</div>
+                </div>
+                <div class="tool-btn" data-tool="spray" onclick="GameController.selectTool('spray', this)">
+                    <div class="tool-icon">✨</div>
+                    <div class="tool-label">Hairspray</div>
+                </div>
             </div>
         </div>
 
-        <!-- Color Palette -->
-        <div id="color-palette">
-            <div class="color-swatch active" style="background: #654321" onclick="GameController.selectColor('#654321', this)"></div>
-            <div class="color-swatch" style="background: #ffd700" onclick="GameController.selectColor('#ffd700', this)"></div>
-            <div class="color-swatch" style="background: #ff6b9d" onclick="GameController.selectColor('#ff6b9d', this)"></div>
-            <div class="color-swatch" style="background: #9370db" onclick="GameController.selectColor('#9370db', this)"></div>
-            <div class="color-swatch" style="background: #00ced1" onclick="GameController.selectColor('#00ced1', this)"></div>
-            <div class="color-swatch" style="background: #ff4500" onclick="GameController.selectColor('#ff4500', this)"></div>
-            <div class="color-swatch" style="background: #32cd32" onclick="GameController.selectColor('#32cd32', this)"></div>
-            <div class="color-swatch" style="background: #000000" onclick="GameController.selectColor('#000000', this)"></div>
-        </div>
+        <!-- Bottom: Status Bar -->
+        <div id="status-bar">
+            <!-- Hair Length Progress Bar -->
+            <div class="status-item">
+                <div class="status-label">Hair Length</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="length-bar" style="width: 100%">100%</div>
+                </div>
+            </div>
 
-        <!-- Action Buttons -->
-        <div id="action-buttons">
-            <button class="action-btn" onclick="GameController.undoAction()">Undo</button>
-            <button class="action-btn" onclick="GameController.resetHair()">Reset Hair</button>
-            <button class="action-btn primary" onclick="GameController.finishStyling()">Finish & Show!</button>
+            <!-- Current Style -->
+            <div class="status-item">
+                <div class="status-label">Style</div>
+                <div class="status-value">
+                    <div class="indicator-box" id="style-indicator">
+                        <span id="style-text">Straight 📏</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Color -->
+            <div class="status-item">
+                <div class="status-label">Color</div>
+                <div class="status-value">
+                    <div class="indicator-box">
+                        <div class="color-preview" id="color-preview" style="background: #654321"></div>
+                        <span id="color-text">Brown</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customer Mood -->
+            <div class="status-item">
+                <div class="status-label">Customer Mood</div>
+                <div class="progress-bar mood-bar">
+                    <div class="progress-fill" id="mood-bar" data-mood="high" style="width: 75%">75%</div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons-group">
+                <button class="action-btn" onclick="GameController.undoAction()">Undo</button>
+                <button class="action-btn" onclick="GameController.resetHair()">Reset</button>
+                <button class="action-btn primary" onclick="GameController.finishStyling()">Finish!</button>
+            </div>
         </div>
 
         <!-- Completion Screen -->
@@ -666,10 +930,47 @@
              * Update all UI elements to reflect current state
              */
             updateUI() {
-                // Update hair length indicator
-                const hairLengthEl = document.getElementById('hair-length');
-                if (hairLengthEl) {
-                    hairLengthEl.textContent = `Hair Length: ${Math.round(this.hairLength)}%`;
+                // Update hair length progress bar
+                const lengthBar = document.getElementById('length-bar');
+                if (lengthBar) {
+                    const length = Math.round(this.hairLength);
+                    lengthBar.style.width = `${length}%`;
+                    lengthBar.textContent = `${length}%`;
+                }
+
+                // Update style indicator
+                const styleText = document.getElementById('style-text');
+                if (styleText) {
+                    const styleEmoji = this.style === 'curly' ? '🌀' : '📏';
+                    const styleName = this.style.charAt(0).toUpperCase() + this.style.slice(1);
+                    styleText.textContent = `${styleName} ${styleEmoji}`;
+                }
+
+                // Update color preview and text
+                const colorPreview = document.getElementById('color-preview');
+                const colorText = document.getElementById('color-text');
+                if (colorPreview) {
+                    colorPreview.style.background = this.color;
+                }
+                if (colorText) {
+                    colorText.textContent = this.getColorName(this.color);
+                }
+
+                // Update customer mood bar
+                const moodBar = document.getElementById('mood-bar');
+                if (moodBar) {
+                    const mood = Math.round(this.customerMood);
+                    moodBar.style.width = `${mood}%`;
+                    moodBar.textContent = `${mood}%`;
+
+                    // Update mood color
+                    if (mood >= 70) {
+                        moodBar.setAttribute('data-mood', 'high');
+                    } else if (mood >= 40) {
+                        moodBar.setAttribute('data-mood', 'medium');
+                    } else {
+                        moodBar.setAttribute('data-mood', 'low');
+                    }
                 }
 
                 // Update lock indicator
@@ -687,6 +988,24 @@
 
                 // Update customer mood (could affect facial expression in future)
                 this.updateCustomerMood();
+            },
+
+            /**
+             * Get human-readable color name
+             */
+            getColorName(hex) {
+                const colorNames = {
+                    '#654321': 'Brown',
+                    '#000000': 'Black',
+                    '#8b4513': 'Tan',
+                    '#ffd700': 'Gold',
+                    '#ff6b9d': 'Pink',
+                    '#9370db': 'Purple',
+                    '#00ced1': 'Cyan',
+                    '#ff4500': 'Orange',
+                    '#32cd32': 'Green'
+                };
+                return colorNames[hex] || 'Custom';
             },
 
             /**
