@@ -277,6 +277,128 @@
             z-index: 100;
         }
 
+        /* Feedback Message */
+        #feedback-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 20px 40px;
+            border-radius: 15px;
+            font-size: 22px;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 180;
+            pointer-events: none;
+            text-align: center;
+        }
+
+        #feedback-message.show {
+            opacity: 1;
+            animation: feedback-pop 0.6s ease;
+        }
+
+        @keyframes feedback-pop {
+            0% { transform: translate(-50%, -50%) scale(0.8); }
+            50% { transform: translate(-50%, -50%) scale(1.1); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+
+        /* Color Picker Modal */
+        #color-picker-modal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            z-index: 250;
+            transition: transform 0.3s ease;
+        }
+
+        #color-picker-modal.show {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .color-option {
+            width: 80px;
+            height: 80px;
+            border-radius: 15px;
+            cursor: pointer;
+            border: 4px solid transparent;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+            border-color: #f093fb;
+        }
+
+        .close-modal-btn {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #fff;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .close-modal-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102,126,234,0.5);
+        }
+
+        /* Hairspray Lock Indicator */
+        #lock-indicator {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            background: rgba(255, 215, 0, 0.9);
+            color: #333;
+            padding: 15px 25px;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: 700;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: 100;
+            display: none;
+            animation: pulse 1s infinite;
+        }
+
+        #lock-indicator.show {
+            display: block;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
         /* Completion Screen */
         #completion-screen {
             position: absolute;
@@ -385,6 +507,29 @@
         <!-- Hair Length Indicator -->
         <div id="hair-length">Hair Length: 100%</div>
 
+        <!-- Lock Indicator -->
+        <div id="lock-indicator">🔒 Length Locked!</div>
+
+        <!-- Feedback Message -->
+        <div id="feedback-message"></div>
+
+        <!-- Color Picker Modal -->
+        <div id="color-picker-modal">
+            <div class="modal-title">Choose Hair Color 🎨</div>
+            <div class="color-grid">
+                <div class="color-option" style="background: #654321" onclick="GameController.applyDyeColor('#654321')"></div>
+                <div class="color-option" style="background: #000000" onclick="GameController.applyDyeColor('#000000')"></div>
+                <div class="color-option" style="background: #8b4513" onclick="GameController.applyDyeColor('#8b4513')"></div>
+                <div class="color-option" style="background: #ffd700" onclick="GameController.applyDyeColor('#ffd700')"></div>
+                <div class="color-option" style="background: #ff6b9d" onclick="GameController.applyDyeColor('#ff6b9d')"></div>
+                <div class="color-option" style="background: #9370db" onclick="GameController.applyDyeColor('#9370db')"></div>
+                <div class="color-option" style="background: #00ced1" onclick="GameController.applyDyeColor('#00ced1')"></div>
+                <div class="color-option" style="background: #ff4500" onclick="GameController.applyDyeColor('#ff4500')"></div>
+                <div class="color-option" style="background: #32cd32" onclick="GameController.applyDyeColor('#32cd32')"></div>
+            </div>
+            <button class="close-modal-btn" onclick="GameController.closeColorPicker()">Close</button>
+        </div>
+
         <!-- Tools Panel -->
         <div id="tools-panel">
             <div class="tool-btn active" data-tool="scissors" onclick="GameController.selectTool('scissors', this)">
@@ -460,7 +605,8 @@
 
             // Tool state
             currentTool: 'scissors',  // Active tool
-            isDrawing: false,         // Mouse interaction state
+            lengthLocked: false,      // Hairspray lock state
+            isDrawing: false,         // Mouse interaction state (legacy)
             mousePos: { x: 0, y: 0 }, // Current mouse position
 
             // History for undo system
@@ -526,6 +672,16 @@
                     hairLengthEl.textContent = `Hair Length: ${Math.round(this.hairLength)}%`;
                 }
 
+                // Update lock indicator
+                const lockEl = document.getElementById('lock-indicator');
+                if (lockEl) {
+                    if (this.lengthLocked) {
+                        lockEl.classList.add('show');
+                    } else {
+                        lockEl.classList.remove('show');
+                    }
+                }
+
                 // Redraw canvas
                 Renderer.drawScene();
 
@@ -535,30 +691,62 @@
 
             /**
              * Calculate and update customer mood based on current state
+             * Returns the mood change delta for feedback
              */
             updateCustomerMood() {
-                // Simple mood calculation
+                const oldMood = this.customerMood;
+
+                // Base mood calculation
                 let mood = 50;
 
-                // Check if length is in target range
-                if (this.hairLength >= this.targetMin && this.hairLength <= this.targetMax) {
-                    mood += 20;
+                // Check if length is in target range (biggest factor)
+                const targetCenter = (this.targetMin + this.targetMax) / 2;
+                const targetRange = this.targetMax - this.targetMin;
+                const lengthDiff = Math.abs(this.hairLength - targetCenter);
+
+                if (lengthDiff < targetRange / 2) {
+                    // Within target range
+                    mood += 30;
+                } else if (lengthDiff < targetRange) {
+                    // Close to target
+                    mood += 15;
+                } else {
+                    // Far from target
+                    mood -= 10;
                 }
 
                 // Bonus for good shine
                 if (this.shine > 60) {
-                    mood += 15;
+                    mood += 10;
                 }
 
                 // Mood decreases if hair too short or too long
-                if (this.hairLength < 20) {
-                    mood -= 20;
-                } else if (this.hairLength > 90) {
-                    mood -= 10;
+                if (this.hairLength < 10) {
+                    mood -= 30;
+                } else if (this.hairLength > 95) {
+                    mood -= 5;
                 }
 
                 // Clamp mood between 0-100
                 this.customerMood = Math.max(0, Math.min(100, mood));
+
+                return this.customerMood - oldMood;
+            },
+
+            /**
+             * Toggle hairspray lock
+             */
+            toggleLengthLock() {
+                this.lengthLocked = !this.lengthLocked;
+                this.updateUI();
+            },
+
+            /**
+             * Unlock hair length (used after one action)
+             */
+            unlockLength() {
+                this.lengthLocked = false;
+                this.updateUI();
             },
 
             /**
@@ -571,6 +759,7 @@
                 this.shine = 50;
                 this.customerMood = 75;
                 this.currentTool = 'scissors';
+                this.lengthLocked = false;
                 this.history = [];
                 this.isDrawing = false;
 
@@ -578,17 +767,31 @@
                 this.targetMin = 20 + Math.floor(Math.random() * 30);
                 this.targetMax = this.targetMin + 20 + Math.floor(Math.random() * 30);
 
+                console.log(`New customer! Target length: ${this.targetMin}-${this.targetMax}%`);
+
                 this.updateUI();
             },
 
             /**
              * Modify hair length with bounds checking
              * @param {number} delta - Amount to change length by
+             * @returns {boolean} True if length was modified, false if locked
              */
             modifyHairLength(delta) {
+                if (this.lengthLocked) {
+                    console.log('Hair length is locked!');
+                    return false;
+                }
+
                 this.pushState();
+                const oldLength = this.hairLength;
                 this.hairLength = Math.max(0, Math.min(100, this.hairLength + delta));
                 this.updateUI();
+
+                // Auto-unlock after one use
+                this.unlockLength();
+
+                return true;
             },
 
             /**
@@ -954,6 +1157,21 @@
                 }, 1000);
             },
 
+            /**
+             * Show feedback message to user
+             * @param {string} message - The feedback message
+             * @param {number} duration - Duration in ms (default 2000)
+             */
+            showFeedback(message, duration = 2000) {
+                const feedback = document.getElementById('feedback-message');
+                feedback.textContent = message;
+                feedback.classList.add('show');
+
+                setTimeout(() => {
+                    feedback.classList.remove('show');
+                }, duration);
+            },
+
             darkenColor(color) {
                 const hex = color.replace('#', '');
                 const r = Math.max(0, parseInt(hex.substr(0, 2), 16) - 40);
@@ -1078,28 +1296,195 @@
             setupEventListeners() {
                 const canvas = Renderer.canvas;
 
-                // Mouse events
-                canvas.addEventListener('mousedown', (e) => this.startAction(e));
-                canvas.addEventListener('mousemove', (e) => this.performAction(e));
-                canvas.addEventListener('mouseup', () => this.stopAction());
-                canvas.addEventListener('mouseleave', () => this.stopAction());
+                // Click-based interaction
+                canvas.addEventListener('click', (e) => this.handleCanvasClick(e));
 
                 // Touch events
-                canvas.addEventListener('touchstart', (e) => {
+                canvas.addEventListener('touchend', (e) => {
                     e.preventDefault();
-                    const touch = e.touches[0];
-                    gameState.mousePos = { x: touch.clientX, y: touch.clientY };
-                    this.startAction();
+                    const touch = e.changedTouches[0];
+                    const clickEvent = { clientX: touch.clientX, clientY: touch.clientY };
+                    this.handleCanvasClick(clickEvent);
                 });
+            },
 
-                canvas.addEventListener('touchmove', (e) => {
-                    e.preventDefault();
-                    const touch = e.touches[0];
-                    gameState.mousePos = { x: touch.clientX, y: touch.clientY };
-                    this.performAction();
-                });
+            /**
+             * Handle canvas clicks - apply current tool
+             */
+            handleCanvasClick(e) {
+                if (!gameState.isGameActive) return;
 
-                canvas.addEventListener('touchend', () => this.stopAction());
+                const x = e.clientX;
+                const y = e.clientY;
+
+                // Execute tool action
+                switch(gameState.currentTool) {
+                    case 'scissors':
+                        this.useScissors(x, y);
+                        break;
+                    case 'clippers':
+                        this.useClippers(x, y);
+                        break;
+                    case 'dye':
+                        this.useDye();
+                        break;
+                    case 'curler':
+                        this.useCurler(x, y);
+                        break;
+                    case 'straightener':
+                        this.useStraightener(x, y);
+                        break;
+                    case 'spray':
+                        this.useHairspray(x, y);
+                        break;
+                }
+            },
+
+            /**
+             * SCISSORS - Reduce hair length by 5-10 randomly
+             */
+            useScissors(x, y) {
+                const reduction = -1 * (5 + Math.floor(Math.random() * 6)); // -5 to -10
+
+                if (!gameState.modifyHairLength(reduction)) {
+                    Effects.showFeedback('Hair is locked! 🔒');
+                    return;
+                }
+
+                const actualReduction = Math.abs(reduction);
+
+                // Visual effects
+                Effects.createHairClipping(x, y);
+                Effects.showComment('cutting');
+                Audio.playSound('snip');
+
+                // Feedback
+                const moodChange = gameState.updateCustomerMood();
+                const moodEmoji = moodChange > 0 ? '😊' : moodChange < 0 ? '😟' : '😐';
+                Effects.showFeedback(`Snipped ${actualReduction}% ${moodEmoji}`);
+            },
+
+            /**
+             * CLIPPERS - Reduce hair length by 20-30 randomly
+             */
+            useClippers(x, y) {
+                const reduction = -1 * (20 + Math.floor(Math.random() * 11)); // -20 to -30
+
+                if (!gameState.modifyHairLength(reduction)) {
+                    Effects.showFeedback('Hair is locked! 🔒');
+                    return;
+                }
+
+                const actualReduction = Math.abs(reduction);
+
+                // Visual effects
+                for (let i = 0; i < 3; i++) {
+                    setTimeout(() => {
+                        Effects.createHairClipping(x + (Math.random() - 0.5) * 50, y + (Math.random() - 0.5) * 50);
+                    }, i * 100);
+                }
+                Effects.showComment('clipping');
+                Audio.playSound('buzz');
+
+                // Feedback
+                const moodChange = gameState.updateCustomerMood();
+                const moodEmoji = moodChange > 0 ? '😊' : moodChange < 0 ? '😟' : '😐';
+                Effects.showFeedback(`Buzzed ${actualReduction}% ${moodEmoji}`);
+            },
+
+            /**
+             * DYE - Open color picker
+             */
+            useDye() {
+                document.getElementById('color-picker-modal').classList.add('show');
+                Audio.playSound('click');
+            },
+
+            /**
+             * Apply selected dye color
+             */
+            applyDyeColor(color) {
+                gameState.setColor(color);
+                this.closeColorPicker();
+
+                // Visual effects
+                Effects.showComment('dyeing');
+                Effects.showReaction('🎨');
+                Audio.playSound('splash');
+
+                // Feedback
+                const moodChange = gameState.updateCustomerMood();
+                const moodEmoji = moodChange > 0 ? '😊' : moodChange < 0 ? '😟' : '😐';
+                Effects.showFeedback(`Hair dyed! ${moodEmoji}`);
+            },
+
+            /**
+             * Close color picker modal
+             */
+            closeColorPicker() {
+                document.getElementById('color-picker-modal').classList.remove('show');
+            },
+
+            /**
+             * CURLER - Change style to curly
+             */
+            useCurler(x, y) {
+                if (gameState.style === 'curly') {
+                    Effects.showFeedback('Hair is already curly! 🌀');
+                    return;
+                }
+
+                gameState.setStyle('curly');
+
+                // Visual effects
+                Effects.showComment('curling');
+                Audio.playSound('sizzle');
+
+                // Feedback
+                const moodChange = gameState.updateCustomerMood();
+                const moodEmoji = moodChange > 0 ? '😊' : moodChange < 0 ? '😟' : '😐';
+                Effects.showFeedback(`Hair is now curly! 🌀 ${moodEmoji}`);
+            },
+
+            /**
+             * STRAIGHTENER - Change style to straight
+             */
+            useStraightener(x, y) {
+                if (gameState.style === 'straight') {
+                    Effects.showFeedback('Hair is already straight! 📏');
+                    return;
+                }
+
+                gameState.setStyle('straight');
+
+                // Visual effects
+                Effects.showComment('straightening');
+                Audio.playSound('sizzle');
+
+                // Feedback
+                const moodChange = gameState.updateCustomerMood();
+                const moodEmoji = moodChange > 0 ? '😊' : moodChange < 0 ? '😟' : '😐';
+                Effects.showFeedback(`Hair is now straight! 📏 ${moodEmoji}`);
+            },
+
+            /**
+             * HAIRSPRAY - Lock hair length for next action
+             */
+            useHairspray(x, y) {
+                gameState.toggleLengthLock();
+                gameState.modifyShine(5);
+
+                // Visual effects
+                Effects.createSparkle(x, y);
+                Effects.showComment('spray');
+                Audio.playSound('spray');
+
+                // Feedback
+                if (gameState.lengthLocked) {
+                    Effects.showFeedback('Hair length locked! 🔒✨');
+                } else {
+                    Effects.showFeedback('Lock removed! ✨');
+                }
             },
 
             startGame() {
@@ -1130,77 +1515,6 @@
                 document.querySelectorAll('.color-swatch').forEach(sw => sw.classList.remove('active'));
                 element.classList.add('active');
                 Audio.playSound('click');
-            },
-
-            startAction(e) {
-                gameState.isDrawing = true;
-                if (e) {
-                    gameState.mousePos = { x: e.clientX, y: e.clientY };
-                }
-            },
-
-            performAction(e) {
-                if (!gameState.isDrawing) return;
-
-                if (e) {
-                    gameState.mousePos = { x: e.clientX, y: e.clientY };
-                }
-
-                const tool = gameState.currentTool;
-                const { x, y } = gameState.mousePos;
-
-                switch(tool) {
-                    case 'scissors':
-                        if (Math.random() > 0.7) {
-                            gameState.modifyHairLength(-2);
-                            Effects.createHairClipping(x, y);
-                            Effects.showComment('cutting');
-                            Audio.playSound('snip');
-                        }
-                        break;
-
-                    case 'clippers':
-                        if (Math.random() > 0.5) {
-                            gameState.modifyHairLength(-5);
-                            Effects.createHairClipping(x, y);
-                            Effects.showComment('clipping');
-                            Audio.playSound('buzz');
-                        }
-                        break;
-
-                    case 'dye':
-                        Effects.showComment('dyeing');
-                        Audio.playSound('splash');
-                        Effects.showReaction('🎨');
-                        break;
-
-                    case 'curler':
-                        if (gameState.style !== 'curly') {
-                            gameState.setStyle('curly');
-                        }
-                        Effects.showComment('curling');
-                        Audio.playSound('sizzle');
-                        break;
-
-                    case 'straightener':
-                        if (gameState.style !== 'straight') {
-                            gameState.setStyle('straight');
-                        }
-                        Effects.showComment('straightening');
-                        Audio.playSound('sizzle');
-                        break;
-
-                    case 'spray':
-                        gameState.modifyShine(5);
-                        Effects.createSparkle(x, y);
-                        Effects.showComment('spray');
-                        Audio.playSound('spray');
-                        break;
-                }
-            },
-
-            stopAction() {
-                gameState.isDrawing = false;
             },
 
             undoAction() {
