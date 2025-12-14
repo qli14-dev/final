@@ -247,35 +247,47 @@
     </div>
 
     <script>
-        // Card data with Unsplash photos and theme colors
+        // Card data using card.svg with theme colors extracted from images
         const cardData = [
             {
-                image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=1000&fit=crop',
-                title: 'Coastal Vibes',
-                description: 'Discover the serene beauty of ocean life',
-                theme: 'ocean',
-                bgColor: '#409cff'
-            },
-            {
-                image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&h=1000&fit=crop',
-                title: 'Golden Hour',
-                description: 'Embrace the warmth of sunset moments',
-                theme: 'sunset',
-                bgColor: '#ff6b6b'
-            },
-            {
-                image: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=800&h=1000&fit=crop',
-                title: 'Urban Explorer',
-                description: 'Navigate through city adventures',
+                image: 'card.svg',
+                // Position to show card at x="2849" y="0" (top right section)
+                objectPosition: '71.5% 0%',
+                scale: 2.8,
+                title: 'Creative Vision',
+                description: 'Express your unique perspective',
                 theme: 'coral',
                 bgColor: '#ff7f50'
             },
             {
-                image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&h=1000&fit=crop',
-                title: 'Natural Beauty',
-                description: 'Connect with the essence of nature',
+                image: 'card.svg',
+                // Position to show card at x="1873" y="2482" (bottom middle-right)
+                objectPosition: '56% 75%',
+                scale: 3.2,
+                title: 'Bold Moments',
+                description: 'Capture life\'s vibrant energy',
+                theme: 'sunset',
+                bgColor: '#ff6b6b'
+            },
+            {
+                image: 'card.svg',
+                // Position to show card at x="0" y="2568" (bottom left)
+                objectPosition: '13.5% 77%',
+                scale: 3.0,
+                title: 'Natural Style',
+                description: 'Embrace authentic beauty',
                 theme: 'nature',
                 bgColor: '#2ed573'
+            },
+            {
+                image: 'card.svg',
+                // Position to show card at x="239" y="232" (top left)
+                objectPosition: '12% 8%',
+                scale: 3.5,
+                title: 'Fresh Perspective',
+                description: 'Discover new possibilities',
+                theme: 'ocean',
+                bgColor: '#409cff'
             }
         ];
 
@@ -311,7 +323,8 @@
 
                     card.innerHTML = `
                         <div class="card-inner">
-                            <img src="${data.image}" alt="${data.title}" class="card-image">
+                            <img src="${data.image}" alt="${data.title}" class="card-image"
+                                 style="object-position: ${data.objectPosition}; transform: scale(${data.scale});">
                             <div class="card-gradient"></div>
                             <div class="card-content">
                                 <h2 class="card-title">${data.title}</h2>
