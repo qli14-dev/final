@@ -1,0 +1,1685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hair Salon Stylist - Interactive Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Comic Sans MS', 'Arial', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        #game-container {
+            width: 95%;
+            max-width: 1200px;
+            min-height: 90vh;
+            background: white;
+            border-radius: 30px;
+            box-shadow: 0 20px 80px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Welcome Screen */
+        #welcome-screen {
+            padding: 60px 40px;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .salon-logo {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            font-size: 24px;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+
+        .start-button {
+            padding: 20px 60px;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+
+        .start-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Customer Selection Screen */
+        #customer-selection {
+            display: none;
+            padding: 40px;
+            min-height: 90vh;
+        }
+
+        .screen-title {
+            font-size: 36px;
+            color: #764ba2;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .customer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .customer-card {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 50%);
+            border-radius: 20px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 4px solid transparent;
+            text-align: center;
+        }
+
+        .customer-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            border-color: #764ba2;
+        }
+
+        .customer-avatar {
+            font-size: 80px;
+            margin-bottom: 15px;
+        }
+
+        .customer-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #764ba2;
+            margin-bottom: 10px;
+        }
+
+        .customer-bio {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .customer-preference {
+            font-size: 12px;
+            background: rgba(118, 75, 162, 0.2);
+            padding: 8px;
+            border-radius: 10px;
+            color: #764ba2;
+            font-weight: bold;
+        }
+
+        /* Game Screen */
+        #game-screen {
+            display: none;
+            min-height: 90vh;
+        }
+
+        .game-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .customer-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .customer-info-avatar {
+            font-size: 48px;
+        }
+
+        .customer-details h3 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .progress-bar {
+            width: 300px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
+            transition: width 0.5s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .satisfaction-meter {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .satisfaction-meter span {
+            font-size: 16px;
+        }
+
+        .hearts {
+            font-size: 24px;
+        }
+
+        /* Game Content */
+        .game-content {
+            display: flex;
+            height: calc(90vh - 100px);
+        }
+
+        /* Character Display */
+        .character-display {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 20%);
+            position: relative;
+        }
+
+        .character-container {
+            position: relative;
+            width: 400px;
+            height: 500px;
+        }
+
+        .character-head {
+            position: absolute;
+            width: 200px;
+            height: 240px;
+            background: #f5d5c8;
+            border-radius: 50% 50% 45% 45%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Hair Styles */
+        .hair {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transition: all 0.5s;
+        }
+
+        .hair-long {
+            background: #8B4513;
+            border-radius: 50% 50% 50% 50%;
+            width: 220px;
+            height: 280px;
+            top: 45%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .hair-short {
+            background: #8B4513;
+            border-radius: 50% 50% 30% 30%;
+            width: 210px;
+            height: 200px;
+            top: 47%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .hair-bob {
+            background: #8B4513;
+            border-radius: 50% 50% 40% 40%;
+            width: 220px;
+            height: 240px;
+            top: 47%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .hair-pixie {
+            background: #8B4513;
+            border-radius: 50% 50% 20% 20%;
+            width: 200px;
+            height: 180px;
+            top: 45%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .hair-layers {
+            background: linear-gradient(180deg, #8B4513 0%, #A0522D 100%);
+            border-radius: 50% 50% 48% 48%;
+            width: 225px;
+            height: 270px;
+            top: 46%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Hair texture overlays */
+        .hair-straight::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.1) 50%, transparent 100%);
+            background-size: 100% 20px;
+        }
+
+        .hair-wavy::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(255, 255, 255, 0.1) 10px,
+                rgba(255, 255, 255, 0.1) 20px
+            );
+        }
+
+        .hair-curly::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.15) 3px, transparent 3px),
+                        radial-gradient(circle at 80% 40%, rgba(255, 255, 255, 0.15) 3px, transparent 3px),
+                        radial-gradient(circle at 40% 60%, rgba(255, 255, 255, 0.15) 3px, transparent 3px),
+                        radial-gradient(circle at 70% 80%, rgba(255, 255, 255, 0.15) 3px, transparent 3px);
+            background-size: 40px 40px;
+        }
+
+        /* Bangs */
+        .bangs {
+            position: absolute;
+            width: 180px;
+            height: 60px;
+            background: inherit;
+            border-radius: 0 0 50% 50%;
+            top: 30%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+
+        /* Face Features */
+        .face-features {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .eyes {
+            position: absolute;
+            top: 45%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            gap: 40px;
+        }
+
+        .eye {
+            width: 20px;
+            height: 20px;
+            background: #654321;
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .eye::before {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: black;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .eye::after {
+            content: '';
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: white;
+            border-radius: 50%;
+            top: 30%;
+            left: 60%;
+        }
+
+        .nose {
+            position: absolute;
+            top: 55%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 15px;
+            height: 20px;
+            border-left: 2px solid rgba(0, 0, 0, 0.1);
+            border-radius: 0 0 0 50%;
+        }
+
+        .mouth {
+            position: absolute;
+            top: 68%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 20px;
+            border: 2px solid #d4a5a5;
+            border-top: none;
+            border-radius: 0 0 50% 50%;
+        }
+
+        .smile .mouth {
+            border-color: #ff6b9d;
+            height: 25px;
+        }
+
+        .neutral .mouth {
+            border-radius: 0;
+            height: 2px;
+            border-bottom: 2px solid #d4a5a5;
+        }
+
+        .sad .mouth {
+            border-top: 2px solid #999;
+            border-bottom: none;
+            border-radius: 50% 50% 0 0;
+            height: 15px;
+        }
+
+        /* Accessories */
+        .accessory {
+            position: absolute;
+            z-index: 20;
+        }
+
+        .accessory-bow {
+            top: 20%;
+            left: 65%;
+            font-size: 48px;
+        }
+
+        .accessory-headband {
+            top: 30%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 20px;
+            background: #ff1493;
+            border-radius: 50% 50% 0 0;
+        }
+
+        .accessory-clip {
+            top: 25%;
+            left: 70%;
+            font-size: 36px;
+        }
+
+        .accessory-flower {
+            top: 22%;
+            left: 20%;
+            font-size: 42px;
+        }
+
+        /* Control Panel */
+        .control-panel {
+            flex: 0 0 450px;
+            background: #fff;
+            padding: 30px;
+            overflow-y: auto;
+            border-left: 3px solid #f0f0f0;
+        }
+
+        .phase-indicator {
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .dialogue-box {
+            background: #f8f8f8;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border-left: 5px solid #764ba2;
+            min-height: 80px;
+        }
+
+        .dialogue-text {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .options-section {
+            margin-bottom: 25px;
+        }
+
+        .option-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #764ba2;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .option-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .option-button {
+            padding: 15px;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            border: 3px solid transparent;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-weight: bold;
+            color: #764ba2;
+        }
+
+        .option-button:hover {
+            transform: scale(1.05);
+            border-color: #764ba2;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .option-button.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #764ba2;
+        }
+
+        .color-picker-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .color-option {
+            width: 100%;
+            height: 50px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 3px solid transparent;
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .color-option.selected {
+            border-color: white;
+            box-shadow: 0 0 0 3px #764ba2;
+        }
+
+        .action-button {
+            width: 100%;
+            padding: 18px;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+            text-transform: uppercase;
+        }
+
+        .action-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .action-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Results Screen */
+        #results-screen {
+            display: none;
+            padding: 60px 40px;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .results-title {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .rating-display {
+            font-size: 80px;
+            margin: 30px 0;
+        }
+
+        .feedback-text {
+            font-size: 24px;
+            margin-bottom: 30px;
+            max-width: 600px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 40px 0;
+            max-width: 800px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 25px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .buttons-row {
+            display: flex;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        /* Mini-game overlays */
+        .mini-game-overlay {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mini-game-container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        .mini-game-title {
+            font-size: 32px;
+            color: #764ba2;
+            margin-bottom: 20px;
+        }
+
+        .mini-game-instruction {
+            font-size: 18px;
+            margin-bottom: 30px;
+            color: #666;
+        }
+
+        #shampoo-game {
+            width: 400px;
+            height: 400px;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-radius: 20px;
+            margin: 0 auto 20px;
+            position: relative;
+            overflow: hidden;
+            cursor: crosshair;
+        }
+
+        .bubble {
+            position: absolute;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), rgba(173, 216, 230, 0.4));
+            border-radius: 50%;
+            animation: float-up 3s ease-in infinite;
+            cursor: pointer;
+        }
+
+        @keyframes float-up {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-400px) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        .timer {
+            font-size: 24px;
+            font-weight: bold;
+            color: #764ba2;
+            margin-bottom: 20px;
+        }
+
+        .score {
+            font-size: 20px;
+            color: #f5576c;
+            font-weight: bold;
+        }
+
+        /* Animations */
+        @keyframes sparkle {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        .sparkle {
+            animation: sparkle 1s infinite;
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .game-content {
+                flex-direction: column;
+            }
+
+            .control-panel {
+                flex: 1;
+            }
+
+            .character-container {
+                width: 300px;
+                height: 400px;
+            }
+
+            .character-head {
+                width: 150px;
+                height: 180px;
+            }
+
+            .option-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .phase-complete {
+            background: #4caf50;
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <!-- Welcome Screen -->
+        <div id="welcome-screen">
+            <div class="salon-logo">💇✂️💅</div>
+            <h1>Hair Salon Stylist</h1>
+            <p class="subtitle">Style, Create, and Make Your Customers Happy!</p>
+            <button class="start-button" onclick="showCustomerSelection()">Start Your Day</button>
+        </div>
+
+        <!-- Customer Selection Screen -->
+        <div id="customer-selection">
+            <h2 class="screen-title">Choose Your Customer</h2>
+            <div class="customer-grid" id="customer-grid"></div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen">
+            <div class="game-header">
+                <div class="customer-info">
+                    <div class="customer-info-avatar" id="current-customer-avatar">👧</div>
+                    <div class="customer-details">
+                        <h3 id="current-customer-name">Customer</h3>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progress-fill" style="width: 0%">0%</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="satisfaction-meter">
+                    <span>Satisfaction:</span>
+                    <div class="hearts" id="satisfaction-hearts">❤️❤️❤️❤️❤️</div>
+                </div>
+            </div>
+
+            <div class="game-content">
+                <div class="character-display">
+                    <div class="character-container">
+                        <div class="hair" id="character-hair"></div>
+                        <div class="character-head" id="character-head">
+                            <div class="face-features" id="face-expression">
+                                <div class="eyes">
+                                    <div class="eye"></div>
+                                    <div class="eye"></div>
+                                </div>
+                                <div class="nose"></div>
+                                <div class="mouth"></div>
+                            </div>
+                        </div>
+                        <div id="accessories-container"></div>
+                    </div>
+                </div>
+
+                <div class="control-panel">
+                    <div class="phase-indicator" id="phase-indicator">Phase: Consultation</div>
+
+                    <div class="dialogue-box">
+                        <p class="dialogue-text" id="dialogue-text">Welcome! I'm ready for my makeover!</p>
+                    </div>
+
+                    <div id="control-options"></div>
+
+                    <button class="action-button" id="next-button" onclick="nextPhase()">Next Phase</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="results-screen" style="display: none;">
+            <h2 class="results-title">Service Complete!</h2>
+            <div class="rating-display" id="final-rating">⭐⭐⭐⭐⭐</div>
+            <p class="feedback-text" id="customer-feedback">Amazing work! I love it!</p>
+
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value" id="time-spent">5:30</div>
+                    <div class="stat-label">Time Spent</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="satisfaction-score">95%</div>
+                    <div class="stat-label">Satisfaction</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="tip-earned">$25</div>
+                    <div class="stat-label">Tip Earned</div>
+                </div>
+            </div>
+
+            <div class="buttons-row">
+                <button class="start-button" onclick="showCustomerSelection()">Next Customer</button>
+                <button class="start-button" onclick="location.reload()">Return to Menu</button>
+            </div>
+        </div>
+
+        <!-- Mini-game: Shampoo -->
+        <div class="mini-game-overlay" id="shampoo-mini-game">
+            <div class="mini-game-container">
+                <h3 class="mini-game-title">🧴 Shampoo Time! 🧴</h3>
+                <p class="mini-game-instruction">Pop all the bubbles before time runs out!</p>
+                <div class="timer">Time: <span id="shampoo-timer">30</span>s</div>
+                <div class="score">Bubbles Popped: <span id="bubbles-popped">0</span> / 20</div>
+                <div id="shampoo-game"></div>
+                <button class="action-button" onclick="skipMiniGame()">Skip Mini-game</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        const gameState = {
+            currentCustomer: null,
+            currentPhase: 0,
+            satisfaction: 5,
+            choices: {
+                shampoo: null,
+                cut: null,
+                color: null,
+                style: null,
+                accessory: null
+            },
+            startTime: null,
+            phasesComplete: []
+        };
+
+        // Customer Data
+        const customers = [
+            {
+                id: 1,
+                name: 'Emma',
+                avatar: '👧',
+                bio: 'Trendy teenager who loves bold styles',
+                preference: 'Wants something edgy and colorful',
+                likes: ['short', 'pixie', 'bright', 'bold'],
+                dislikes: ['long', 'natural', 'traditional'],
+                skinTone: '#f5d5c8'
+            },
+            {
+                id: 2,
+                name: 'Sophia',
+                avatar: '👩',
+                bio: 'Professional woman seeking elegance',
+                preference: 'Classic and sophisticated look',
+                likes: ['bob', 'layers', 'natural', 'subtle'],
+                dislikes: ['pixie', 'bright', 'extreme'],
+                skinTone: '#e8b49a'
+            },
+            {
+                id: 3,
+                name: 'Mia',
+                avatar: '👱‍♀️',
+                bio: 'Artistic soul who loves creativity',
+                preference: 'Unique and creative styles',
+                likes: ['layers', 'waves', 'highlights', 'vibrant'],
+                dislikes: ['traditional', 'simple'],
+                skinTone: '#f0c9b9'
+            },
+            {
+                id: 4,
+                name: 'Olivia',
+                avatar: '👩‍🦰',
+                bio: 'Romantic at heart, loves feminine styles',
+                preference: 'Soft, flowing, and romantic',
+                likes: ['long', 'curly', 'natural', 'accessories'],
+                dislikes: ['short', 'angular', 'extreme'],
+                skinTone: '#ffe0db'
+            },
+            {
+                id: 5,
+                name: 'Ava',
+                avatar: '👩‍🦱',
+                bio: 'Sporty and practical personality',
+                preference: 'Easy to maintain and sporty',
+                likes: ['short', 'straight', 'simple', 'practical'],
+                dislikes: ['high-maintenance', 'complex'],
+                skinTone: '#d4a574'
+            },
+            {
+                id: 6,
+                name: 'Isabella',
+                avatar: '👸',
+                bio: 'Loves glamour and luxury',
+                preference: 'Glamorous and eye-catching',
+                likes: ['long', 'glamorous', 'highlights', 'accessories'],
+                dislikes: ['plain', 'short', 'minimal'],
+                skinTone: '#f7ddc8'
+            }
+        ];
+
+        // Game Phases
+        const phases = [
+            {
+                name: 'Consultation',
+                description: 'Discuss what the customer wants',
+                icon: '💬'
+            },
+            {
+                name: 'Shampoo',
+                description: 'Clean and prepare the hair',
+                icon: '🧴',
+                miniGame: true
+            },
+            {
+                name: 'Cut',
+                description: 'Choose the perfect haircut',
+                icon: '✂️'
+            },
+            {
+                name: 'Color',
+                description: 'Add color or highlights',
+                icon: '🎨'
+            },
+            {
+                name: 'Style',
+                description: 'Style and shape the hair',
+                icon: '💇'
+            },
+            {
+                name: 'Accessories',
+                description: 'Add the finishing touches',
+                icon: '👑'
+            }
+        ];
+
+        // Initialize
+        function showCustomerSelection() {
+            document.getElementById('welcome-screen').style.display = 'none';
+            document.getElementById('customer-selection').style.display = 'block';
+            renderCustomers();
+        }
+
+        function renderCustomers() {
+            const grid = document.getElementById('customer-grid');
+            grid.innerHTML = '';
+
+            customers.forEach(customer => {
+                const card = document.createElement('div');
+                card.className = 'customer-card';
+                card.onclick = () => selectCustomer(customer);
+                card.innerHTML = `
+                    <div class="customer-avatar">${customer.avatar}</div>
+                    <div class="customer-name">${customer.name}</div>
+                    <div class="customer-bio">${customer.bio}</div>
+                    <div class="customer-preference">${customer.preference}</div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function selectCustomer(customer) {
+            gameState.currentCustomer = customer;
+            gameState.startTime = Date.now();
+            gameState.satisfaction = 5;
+            gameState.currentPhase = 0;
+
+            document.getElementById('customer-selection').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'block';
+
+            document.getElementById('current-customer-avatar').textContent = customer.avatar;
+            document.getElementById('current-customer-name').textContent = customer.name;
+            document.getElementById('character-head').style.background = customer.skinTone;
+
+            loadPhase(0);
+        }
+
+        function loadPhase(phaseIndex) {
+            if (phaseIndex >= phases.length) {
+                showResults();
+                return;
+            }
+
+            gameState.currentPhase = phaseIndex;
+            const phase = phases[phaseIndex];
+
+            document.getElementById('phase-indicator').innerHTML = `
+                ${phase.icon} ${phase.name}: ${phase.description}
+            `;
+
+            updateProgress();
+
+            // Load phase-specific content
+            switch(phase.name) {
+                case 'Consultation':
+                    loadConsultationPhase();
+                    break;
+                case 'Shampoo':
+                    loadShampooPhase();
+                    break;
+                case 'Cut':
+                    loadCutPhase();
+                    break;
+                case 'Color':
+                    loadColorPhase();
+                    break;
+                case 'Style':
+                    loadStylePhase();
+                    break;
+                case 'Accessories':
+                    loadAccessoriesPhase();
+                    break;
+            }
+        }
+
+        function loadConsultationPhase() {
+            const customer = gameState.currentCustomer;
+            document.getElementById('dialogue-text').textContent =
+                `Hi! I'm ${customer.name}. ${customer.preference} Can you help me?`;
+
+            const options = `
+                <div class="options-section">
+                    <div class="option-title">💬 Your Response</div>
+                    <div class="option-grid">
+                        <div class="option-button" onclick="consultationChoice('enthusiastic')">
+                            "Absolutely! Let's create something amazing!"
+                        </div>
+                        <div class="option-button" onclick="consultationChoice('professional')">
+                            "Of course. Let me assess your hair type first."
+                        </div>
+                        <div class="option-button" onclick="consultationChoice('creative')">
+                            "I have so many ideas! This will be fun!"
+                        </div>
+                        <div class="option-button" onclick="consultationChoice('careful')">
+                            "Let's discuss your preferences carefully."
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('control-options').innerHTML = options;
+        }
+
+        function consultationChoice(choice) {
+            const responses = {
+                'enthusiastic': "Great! I can tell you're excited!",
+                'professional': "I appreciate your thoroughness!",
+                'creative': "I love your energy!",
+                'careful': "Thank you for being so attentive!"
+            };
+
+            document.getElementById('dialogue-text').textContent = responses[choice];
+            document.querySelectorAll('.option-button').forEach(btn => {
+                btn.style.pointerEvents = 'none';
+                btn.style.opacity = '0.5';
+            });
+
+            setTimeout(() => {
+                document.getElementById('dialogue-text').textContent = "Great! Let's get started with a shampoo!";
+            }, 1500);
+        }
+
+        function loadShampooPhase() {
+            document.getElementById('dialogue-text').textContent =
+                "Time for a refreshing shampoo! Let me choose the perfect product for you.";
+
+            const options = `
+                <div class="options-section">
+                    <div class="option-title">🧴 Choose Shampoo</div>
+                    <div class="option-grid">
+                        <div class="option-button" onclick="selectShampoo('moisturizing')">
+                            🌊 Moisturizing
+                        </div>
+                        <div class="option-button" onclick="selectShampoo('volumizing')">
+                            📦 Volumizing
+                        </div>
+                        <div class="option-button" onclick="selectShampoo('color-safe')">
+                            🎨 Color-Safe
+                        </div>
+                        <div class="option-button" onclick="selectShampoo('clarifying')">
+                            ✨ Clarifying
+                        </div>
+                    </div>
+                </div>
+                <div class="options-section">
+                    <div class="option-title">🎮 Play Mini-game</div>
+                    <button class="action-button" onclick="startShampooGame()">Start Shampooing!</button>
+                </div>
+            `;
+
+            document.getElementById('control-options').innerHTML = options;
+        }
+
+        function selectShampoo(type) {
+            gameState.choices.shampoo = type;
+            document.querySelectorAll('.option-button').forEach(btn => btn.classList.remove('selected'));
+            event.target.classList.add('selected');
+
+            const messages = {
+                'moisturizing': 'Mmm, that smells amazing!',
+                'volumizing': 'My hair feels so light already!',
+                'color-safe': 'Perfect for maintaining color!',
+                'clarifying': 'So refreshing and clean!'
+            };
+
+            document.getElementById('dialogue-text').textContent = messages[type];
+        }
+
+        function startShampooGame() {
+            if (!gameState.choices.shampoo) {
+                alert('Please choose a shampoo first!');
+                return;
+            }
+
+            document.getElementById('shampoo-mini-game').style.display = 'flex';
+
+            let timeLeft = 30;
+            let bubblesPopped = 0;
+            const targetBubbles = 20;
+
+            const gameArea = document.getElementById('shampoo-game');
+            gameArea.innerHTML = '';
+
+            // Spawn bubbles
+            const spawnInterval = setInterval(() => {
+                if (timeLeft <= 0) {
+                    clearInterval(spawnInterval);
+                    return;
+                }
+
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                const size = 30 + Math.random() * 40;
+                bubble.style.width = size + 'px';
+                bubble.style.height = size + 'px';
+                bubble.style.left = Math.random() * (400 - size) + 'px';
+                bubble.style.bottom = '0px';
+                bubble.style.animationDuration = (2 + Math.random() * 2) + 's';
+
+                bubble.onclick = () => {
+                    bubble.remove();
+                    bubblesPopped++;
+                    document.getElementById('bubbles-popped').textContent = bubblesPopped;
+
+                    if (bubblesPopped >= targetBubbles) {
+                        clearInterval(spawnInterval);
+                        clearInterval(timerInterval);
+                        completeMiniGame(true);
+                    }
+                };
+
+                gameArea.appendChild(bubble);
+
+                setTimeout(() => bubble.remove(), 4000);
+            }, 500);
+
+            // Timer
+            const timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('shampoo-timer').textContent = timeLeft;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    clearInterval(spawnInterval);
+                    completeMiniGame(bubblesPopped >= targetBubbles);
+                }
+            }, 1000);
+        }
+
+        function completeMiniGame(success) {
+            setTimeout(() => {
+                document.getElementById('shampoo-mini-game').style.display = 'none';
+
+                if (success) {
+                    document.getElementById('dialogue-text').textContent =
+                        "That was perfect! My hair feels so clean and fresh!";
+                    adjustSatisfaction(1);
+                } else {
+                    document.getElementById('dialogue-text').textContent =
+                        "Thanks! Though I think we could have gotten it a bit cleaner.";
+                }
+
+                gameState.phasesComplete.push('shampoo');
+            }, 1000);
+        }
+
+        function skipMiniGame() {
+            document.getElementById('shampoo-mini-game').style.display = 'none';
+            document.getElementById('dialogue-text').textContent =
+                "Alright, that should be good enough.";
+            gameState.phasesComplete.push('shampoo');
+        }
+
+        function loadCutPhase() {
+            document.getElementById('dialogue-text').textContent =
+                "Now for the exciting part - choosing my new haircut!";
+
+            const options = `
+                <div class="options-section">
+                    <div class="option-title">✂️ Haircut Style</div>
+                    <div class="option-grid">
+                        <div class="option-button" onclick="selectCut('long')">
+                            Long Hair
+                        </div>
+                        <div class="option-button" onclick="selectCut('bob')">
+                            Bob Cut
+                        </div>
+                        <div class="option-button" onclick="selectCut('short')">
+                            Short Hair
+                        </div>
+                        <div class="option-button" onclick="selectCut('pixie')">
+                            Pixie Cut
+                        </div>
+                        <div class="option-button" onclick="selectCut('layers')">
+                            Layered
+                        </div>
+                        <div class="option-button" onclick="selectCut('bangs-yes')">
+                            + Add Bangs
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('control-options').innerHTML = options;
+        }
+
+        function selectCut(style) {
+            gameState.choices.cut = style;
+
+            const hair = document.getElementById('character-hair');
+            hair.className = 'hair';
+
+            if (style === 'bangs-yes') {
+                if (!hair.querySelector('.bangs')) {
+                    const bangs = document.createElement('div');
+                    bangs.className = 'bangs';
+                    hair.appendChild(bangs);
+                }
+                document.getElementById('dialogue-text').textContent =
+                    "Ooh, I love bangs! Great choice!";
+                adjustSatisfaction(0.5);
+            } else {
+                hair.className = `hair hair-${style}`;
+
+                const customer = gameState.currentCustomer;
+                if (customer.likes.includes(style)) {
+                    document.getElementById('dialogue-text').textContent =
+                        "This is exactly what I wanted! You read my mind!";
+                    adjustSatisfaction(1);
+                } else if (customer.dislikes.includes(style)) {
+                    document.getElementById('dialogue-text').textContent =
+                        "Hmm, not quite what I imagined, but let's see...";
+                    adjustSatisfaction(-1);
+                } else {
+                    document.getElementById('dialogue-text').textContent =
+                        "Interesting choice! Let's see how it looks!";
+                }
+            }
+
+            event.target.classList.add('selected');
+        }
+
+        function loadColorPhase() {
+            document.getElementById('dialogue-text').textContent =
+                "Time to add some color! What do you think would look best?";
+
+            const options = `
+                <div class="options-section">
+                    <div class="option-title">🎨 Hair Color</div>
+                    <div class="color-picker-grid">
+                        <div class="color-option" style="background: #2c1810;" onclick="selectColor('#2c1810', 'black')"></div>
+                        <div class="color-option" style="background: #4e342e;" onclick="selectColor('#4e342e', 'brown')"></div>
+                        <div class="color-option" style="background: #f4a460;" onclick="selectColor('#f4a460', 'blonde')"></div>
+                        <div class="color-option" style="background: #8B4513;" onclick="selectColor('#8B4513', 'natural')"></div>
+                        <div class="color-option" style="background: #e74c3c;" onclick="selectColor('#e74c3c', 'bright')"></div>
+                        <div class="color-option" style="background: #9b59b6;" onclick="selectColor('#9b59b6', 'bright')"></div>
+                        <div class="color-option" style="background: #3498db;" onclick="selectColor('#3498db', 'bright')"></div>
+                        <div class="color-option" style="background: #1abc9c;" onclick="selectColor('#1abc9c', 'bright')"></div>
+                        <div class="color-option" style="background: #e91e63;" onclick="selectColor('#e91e63', 'bright')"></div>
+                        <div class="color-option" style="background: #ff6b9d;" onclick="selectColor('#ff6b9d', 'bright')"></div>
+                        <div class="color-option" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);" onclick="selectColor('gradient', 'vibrant')"></div>
+                        <div class="color-option" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" onclick="selectColor('gradient2', 'vibrant')"></div>
+                    </div>
+                </div>
+                <div class="options-section">
+                    <div class="option-title">✨ Highlights/Effects</div>
+                    <div class="option-grid">
+                        <div class="option-button" onclick="addHighlights('subtle')">
+                            Subtle Highlights
+                        </div>
+                        <div class="option-button" onclick="addHighlights('bold')">
+                            Bold Highlights
+                        </div>
+                        <div class="option-button" onclick="addHighlights('ombre')">
+                            Ombré Effect
+                        </div>
+                        <div class="option-button" onclick="addHighlights('none')">
+                            No Highlights
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('control-options').innerHTML = options;
+        }
+
+        function selectColor(color, category) {
+            gameState.choices.color = category;
+
+            const hair = document.getElementById('character-hair');
+            hair.style.background = color;
+
+            document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
+            event.target.classList.add('selected');
+
+            const customer = gameState.currentCustomer;
+            if (category === 'bright' && customer.likes.includes('bright')) {
+                document.getElementById('dialogue-text').textContent =
+                    "YES! This bold color is exactly my style!";
+                adjustSatisfaction(1);
+            } else if (category === 'natural' && customer.likes.includes('natural')) {
+                document.getElementById('dialogue-text').textContent =
+                    "Perfect! I love natural colors!";
+                adjustSatisfaction(1);
+            } else if (category === 'bright' && customer.dislikes.includes('bright')) {
+                document.getElementById('dialogue-text').textContent =
+                    "Oh my... that's quite bold. Not sure if it's me...";
+                adjustSatisfaction(-1);
+            } else {
+                document.getElementById('dialogue-text').textContent =
+                    "Interesting color choice!";
+            }
+        }
+
+        function addHighlights(type) {
+            const messages = {
+                'subtle': 'These subtle highlights are so elegant!',
+                'bold': 'Wow! These bold highlights are amazing!',
+                'ombre': 'I love the ombré effect!',
+                'none': 'Simple and classic - I like it!'
+            };
+
+            document.getElementById('dialogue-text').textContent = messages[type];
+
+            const customer = gameState.currentCustomer;
+            if (type !== 'none' && customer.likes.includes('highlights')) {
+                adjustSatisfaction(0.5);
+            }
+
+            document.querySelectorAll('.option-button').forEach(btn => btn.classList.remove('selected'));
+            event.target.classList.add('selected');
+        }
+
+        function loadStylePhase() {
+            document.getElementById('dialogue-text').textContent =
+                "Almost done! Let's style your hair to perfection!";
+
+            const options = `
+                <div class="options-section">
+                    <div class="option-title">💇 Hair Texture</div>
+                    <div class="option-grid">
+                        <div class="option-button" onclick="selectStyle('straight')">
+                            Straight
+                        </div>
+                        <div class="option-button" onclick="selectStyle('wavy')">
+                            Wavy
+                        </div>
+                        <div class="option-button" onclick="selectStyle('curly')">
+                            Curly
+                        </div>
+                        <div class="option-button" onclick="selectStyle('natural')">
+                            Natural
+                        </div>
+                    </div>
+                </div>
+                <div class="options-section">
+                    <div class="option-title">💨 Finishing Touch</div>
+                    <div class="option-grid">
+                        <div class="option-button" onclick="finishingTouch('shine-spray')">
+                            ✨ Shine Spray
+                        </div>
+                        <div class="option-button" onclick="finishingTouch('hair-spray')">
+                            💨 Hair Spray
+                        </div>
+                        <div class="option-button" onclick="finishingTouch('serum')">
+                            💧 Serum
+                        </div>
+                        <div class="option-button" onclick="finishingTouch('none')">
+                            🚫 None
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('control-options').innerHTML = options;
+        }
+
+        function selectStyle(style) {
+            gameState.choices.style = style;
+
+            const hair = document.getElementById('character-hair');
+            hair.classList.remove('hair-straight', 'hair-wavy', 'hair-curly');
+            hair.classList.add(`hair-${style}`);
+
+            const customer = gameState.currentCustomer;
+            if (customer.likes.includes(style)) {
+                document.getElementById('dialogue-text').textContent =
+                    `${style.charAt(0).toUpperCase() + style.slice(1)} hair is perfect for me!`;
+                adjustSatisfaction(1);
+            } else {
+                document.getElementById('dialogue-text').textContent =
+                    `${style.charAt(0).toUpperCase() + style.slice(1)} styling looks interesting!`;
+            }
+
+            document.querySelectorAll('.option-button').forEach(btn => btn.classList.remove('selected'));
+            event.target.classList.add('selected');
+        }
+
+        function finishingTouch(product) {
+            const messages = {
+                'shine-spray': 'Ooh, so shiny and healthy-looking!',
+                'hair-spray': 'Perfect hold! This will last all day!',
+                'serum': 'So smooth and silky!',
+                'none': 'Natural is best!'
+            };
+
+            document.getElementById('dialogue-text').textContent = messages[product];
+
+            if (product !== 'none') {
+                adjustSatisfaction(0.3);
+            }
+        }
+
+        function loadAccessoriesPhase() {
+            document.getElementById('dialogue-text').textContent =
+                "Final touch! Would you like any accessories?";
+
+            const options = `
+                <div class="options-section">
+                    <div class="option-title">👑 Accessories</div>
+                    <div class="option-grid">
+                        <div class="option-button" onclick="selectAccessory('bow')">
+                            🎀 Bow
+                        </div>
+                        <div class="option-button" onclick="selectAccessory('headband')">
+                            💝 Headband
+                        </div>
+                        <div class="option-button" onclick="selectAccessory('clip')">
+                            📎 Hair Clip
+                        </div>
+                        <div class="option-button" onclick="selectAccessory('flower')">
+                            🌸 Flower
+                        </div>
+                        <div class="option-button" onclick="selectAccessory('none')">
+                            🚫 No Accessory
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('control-options').innerHTML = options;
+        }
+
+        function selectAccessory(type) {
+            gameState.choices.accessory = type;
+
+            const container = document.getElementById('accessories-container');
+            container.innerHTML = '';
+
+            if (type !== 'none') {
+                const accessory = document.createElement('div');
+                accessory.className = `accessory accessory-${type}`;
+
+                switch(type) {
+                    case 'bow':
+                        accessory.textContent = '🎀';
+                        break;
+                    case 'clip':
+                        accessory.textContent = '📎';
+                        break;
+                    case 'flower':
+                        accessory.textContent = '🌸';
+                        break;
+                }
+
+                container.appendChild(accessory);
+
+                const customer = gameState.currentCustomer;
+                if (customer.likes.includes('accessories')) {
+                    document.getElementById('dialogue-text').textContent =
+                        "I love accessories! This is perfect!";
+                    adjustSatisfaction(1);
+                } else {
+                    document.getElementById('dialogue-text').textContent =
+                        "Nice touch! It adds something special!";
+                    adjustSatisfaction(0.5);
+                }
+            } else {
+                document.getElementById('dialogue-text').textContent =
+                    "Simple and elegant - I like it!";
+            }
+
+            document.querySelectorAll('.option-button').forEach(btn => btn.classList.remove('selected'));
+            event.target.classList.add('selected');
+        }
+
+        function adjustSatisfaction(amount) {
+            gameState.satisfaction = Math.max(0, Math.min(5, gameState.satisfaction + amount));
+            updateSatisfactionDisplay();
+            updateExpression();
+        }
+
+        function updateSatisfactionDisplay() {
+            const heartsContainer = document.getElementById('satisfaction-hearts');
+            const fullHearts = Math.floor(gameState.satisfaction);
+            const halfHeart = gameState.satisfaction % 1 >= 0.5;
+
+            let heartsHTML = '';
+            for (let i = 0; i < fullHearts; i++) {
+                heartsHTML += '❤️';
+            }
+            if (halfHeart && fullHearts < 5) {
+                heartsHTML += '💔';
+            }
+            for (let i = fullHearts + (halfHeart ? 1 : 0); i < 5; i++) {
+                heartsHTML += '🤍';
+            }
+
+            heartsContainer.innerHTML = heartsHTML;
+        }
+
+        function updateExpression() {
+            const face = document.getElementById('face-expression');
+            face.className = 'face-features';
+
+            if (gameState.satisfaction >= 4) {
+                face.classList.add('smile');
+            } else if (gameState.satisfaction >= 2) {
+                face.classList.add('neutral');
+            } else {
+                face.classList.add('sad');
+            }
+        }
+
+        function updateProgress() {
+            const progress = ((gameState.currentPhase + 1) / phases.length) * 100;
+            const progressFill = document.getElementById('progress-fill');
+            progressFill.style.width = progress + '%';
+            progressFill.textContent = Math.round(progress) + '%';
+        }
+
+        function nextPhase() {
+            loadPhase(gameState.currentPhase + 1);
+        }
+
+        function showResults() {
+            document.getElementById('game-screen').style.display = 'none';
+            document.getElementById('results-screen').style.display = 'flex';
+
+            // Calculate time spent
+            const timeSpent = Math.floor((Date.now() - gameState.startTime) / 1000);
+            const minutes = Math.floor(timeSpent / 60);
+            const seconds = timeSpent % 60;
+            document.getElementById('time-spent').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+            // Calculate satisfaction percentage
+            const satisfactionPercent = Math.round((gameState.satisfaction / 5) * 100);
+            document.getElementById('satisfaction-score').textContent = satisfactionPercent + '%';
+
+            // Calculate tip
+            const baseTip = 15;
+            const bonusTip = Math.floor((satisfactionPercent - 60) / 4);
+            const totalTip = Math.max(5, baseTip + bonusTip);
+            document.getElementById('tip-earned').textContent = '$' + totalTip;
+
+            // Star rating
+            const stars = Math.max(1, Math.min(5, Math.round(gameState.satisfaction)));
+            document.getElementById('final-rating').textContent = '⭐'.repeat(stars);
+
+            // Feedback
+            const feedbacks = [
+                "I'm not sure about this... it's not what I expected.",
+                "It's okay, but not quite what I wanted.",
+                "Thank you! It looks nice!",
+                "I really like it! Great job!",
+                "This is PERFECT! You're an amazing stylist!"
+            ];
+            document.getElementById('customer-feedback').textContent = feedbacks[stars - 1];
+        }
+
+        // Initialize satisfaction display
+        updateSatisfactionDisplay();
+        updateExpression();
+    </script>
+</body>
+</html>
