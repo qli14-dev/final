@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Zoo Adventure</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', 'Segoe UI', sans-serif;
+            overflow: hidden;
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            height: 100vh;
+            width: 100vw;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* Main Menu */
+        #main-menu {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: opacity 0.5s;
+        }
+
+        #main-menu.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .game-title {
+            font-size: 72px;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 40px rgba(255, 255, 255, 0.8);
+            margin-bottom: 20px;
+            animation: title-bounce 2s infinite;
+        }
+
+        @keyframes title-bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .game-subtitle {
+            font-size: 24px;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 40px;
+            letter-spacing: 2px;
+        }
+
+        .menu-btn {
+            padding: 20px 60px;
+            font-size: 24px;
+            font-weight: 700;
+            color: #fff;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 40px rgba(240, 147, 251, 0.5);
+            margin: 10px;
+        }
+
+        .menu-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 60px rgba(240, 147, 251, 0.8);
+        }
+
+        /* Game Canvas */
+        #game-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* HUD */
+        #hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .top-bar {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 30px;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 15px 30px;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #fff;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .stat-icon {
+            font-size: 24px;
+        }
+
+        /* Animal Display */
+        #animal-area {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 500px;
+            height: 500px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .animal {
+            font-size: 200px;
+            cursor: pointer;
+            transition: transform 0.3s;
+            animation: animal-idle 3s infinite;
+        }
+
+        .animal:hover {
+            transform: scale(1.2);
+        }
+
+        @keyframes animal-idle {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        .animal.jumping {
+            animation: jump 0.6s;
+        }
+
+        @keyframes jump {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-100px) scale(1.3); }
+        }
+
+        .animal.eating {
+            animation: eat 0.8s;
+        }
+
+        @keyframes eat {
+            0%, 100% { transform: scale(1); }
+            25%, 75% { transform: scale(1.2); }
+            50% { transform: scale(0.9); }
+        }
+
+        /* Action Panel */
+        #action-panel {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            pointer-events: all;
+        }
+
+        .action-btn {
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: 3px solid rgba(255, 255, 255, 0.5);
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            min-width: 120px;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
+        }
+
+        .action-btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-icon {
+            font-size: 32px;
+        }
+
+        /* Choice Panel */
+        #choice-panel {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            border-radius: 30px;
+            box-shadow: 0 20px 80px rgba(0, 0, 0, 0.5);
+            z-index: 500;
+            pointer-events: all;
+            transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            max-width: 600px;
+        }
+
+        #choice-panel.show {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .choice-title {
+            font-size: 32px;
+            font-weight: 900;
+            color: #fff;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .choice-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .choice-btn {
+            padding: 20px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .choice-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(1.05);
+        }
+
+        /* Exhibit Selector */
+        #exhibit-selector {
+            position: absolute;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            pointer-events: all;
+        }
+
+        .exhibit-btn {
+            width: 100px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.3);
+            border: 3px solid rgba(255, 255, 255, 0.5);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .exhibit-btn:hover {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .exhibit-btn.active {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-color: #fff;
+            box-shadow: 0 0 30px rgba(240, 147, 251, 0.8);
+        }
+
+        .exhibit-icon {
+            font-size: 40px;
+        }
+
+        .exhibit-label {
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+
+        /* Notification */
+        #notification {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 20px 40px;
+            border-radius: 20px;
+            font-size: 20px;
+            font-weight: 600;
+            opacity: 0;
+            transition: all 0.5s;
+            z-index: 600;
+            pointer-events: none;
+        }
+
+        #notification.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* Mini-Game Overlay */
+        #minigame-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 700;
+            pointer-events: all;
+        }
+
+        #minigame-overlay.show {
+            display: flex;
+        }
+
+        .minigame-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            border-radius: 30px;
+            text-align: center;
+            max-width: 800px;
+        }
+
+        .minigame-title {
+            font-size: 36px;
+            font-weight: 900;
+            color: #fff;
+            margin-bottom: 30px;
+        }
+
+        #minigame-area {
+            min-height: 300px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .memory-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 100px);
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .memory-card {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+            transition: all 0.3s;
+            transform-style: preserve-3d;
+        }
+
+        .memory-card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .memory-card.matched {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        /* Food Items */
+        .food-item {
+            position: absolute;
+            font-size: 40px;
+            cursor: grab;
+            transition: transform 0.2s;
+            pointer-events: all;
+        }
+
+        .food-item:hover {
+            transform: scale(1.2);
+        }
+
+        .food-item.dragging {
+            cursor: grabbing;
+            opacity: 0.7;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            height: 30px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            width: 0%;
+            transition: width 0.5s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        /* Achievement Popup */
+        #achievement-popup {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            padding: 40px;
+            border-radius: 30px;
+            box-shadow: 0 20px 80px rgba(255, 215, 0, 0.5);
+            z-index: 800;
+            text-align: center;
+            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        #achievement-popup.show {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .achievement-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        .achievement-text {
+            font-size: 28px;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Shop Panel */
+        #shop-panel {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            border-radius: 30px;
+            box-shadow: 0 20px 80px rgba(0, 0, 0, 0.5);
+            z-index: 500;
+            pointer-events: all;
+            transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            max-width: 700px;
+        }
+
+        #shop-panel.show {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .shop-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .shop-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .shop-item:hover {
+            transform: scale(1.05);
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .shop-item.owned {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .item-icon {
+            font-size: 50px;
+            margin-bottom: 10px;
+        }
+
+        .item-name {
+            color: #fff;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .item-price {
+            color: #FFD700;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        @media (max-width: 768px) {
+            .game-title { font-size: 36px; }
+            #animal-area { width: 300px; height: 300px; }
+            .animal { font-size: 120px; }
+            .action-btn { min-width: 80px; padding: 10px 15px; font-size: 14px; }
+            .exhibit-btn { width: 70px; height: 70px; }
+            .exhibit-icon { font-size: 30px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <!-- Main Menu -->
+        <div id="main-menu">
+            <div class="game-title">🦁 Zoo Adventure 🐘</div>
+            <div class="game-subtitle">Take Care of Amazing Animals!</div>
+            <button class="menu-btn" onclick="startGame()">Start Game</button>
+            <button class="menu-btn" onclick="showInstructions()">How to Play</button>
+        </div>
+
+        <!-- Game Canvas -->
+        <canvas id="game-canvas"></canvas>
+
+        <!-- HUD -->
+        <div id="hud">
+            <div class="top-bar">
+                <div class="stat-item">
+                    <span class="stat-icon">💰</span>
+                    <span id="coins">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-icon">⭐</span>
+                    <span id="happiness">100</span>%
+                </div>
+                <div class="stat-item">
+                    <span class="stat-icon">🏆</span>
+                    <span id="level">1</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-icon">👥</span>
+                    <span id="visitors">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Animal Display Area -->
+        <div id="animal-area">
+            <div class="animal" id="current-animal" onclick="interactWithAnimal()">🦁</div>
+        </div>
+
+        <!-- Action Panel -->
+        <div id="action-panel">
+            <button class="action-btn" onclick="feedAnimal()">
+                <span class="btn-icon">🍎</span>
+                <span>Feed</span>
+            </button>
+            <button class="action-btn" onclick="playWithAnimal()">
+                <span class="btn-icon">⚽</span>
+                <span>Play</span>
+            </button>
+            <button class="action-btn" onclick="cleanAnimal()">
+                <span class="btn-icon">🧼</span>
+                <span>Clean</span>
+            </button>
+            <button class="action-btn" onclick="trainAnimal()">
+                <span class="btn-icon">🎯</span>
+                <span>Train</span>
+            </button>
+            <button class="action-btn" onclick="openShop()">
+                <span class="btn-icon">🛒</span>
+                <span>Shop</span>
+            </button>
+        </div>
+
+        <!-- Exhibit Selector -->
+        <div id="exhibit-selector">
+            <div class="exhibit-btn active" onclick="changeExhibit('savanna')" data-exhibit="savanna">
+                <div class="exhibit-icon">🦁</div>
+                <div class="exhibit-label">Savanna</div>
+            </div>
+            <div class="exhibit-btn" onclick="changeExhibit('arctic')" data-exhibit="arctic">
+                <div class="exhibit-icon">🐧</div>
+                <div class="exhibit-label">Arctic</div>
+            </div>
+            <div class="exhibit-btn" onclick="changeExhibit('jungle')" data-exhibit="jungle">
+                <div class="exhibit-icon">🦍</div>
+                <div class="exhibit-label">Jungle</div>
+            </div>
+            <div class="exhibit-btn" onclick="changeExhibit('ocean')" data-exhibit="ocean">
+                <div class="exhibit-icon">🐬</div>
+                <div class="exhibit-label">Ocean</div>
+            </div>
+            <div class="exhibit-btn" onclick="changeExhibit('farm')" data-exhibit="farm">
+                <div class="exhibit-icon">🐮</div>
+                <div class="exhibit-label">Farm</div>
+            </div>
+        </div>
+
+        <!-- Notification -->
+        <div id="notification"></div>
+
+        <!-- Choice Panel -->
+        <div id="choice-panel">
+            <div class="choice-title" id="choice-title">Make a Choice!</div>
+            <div id="choice-description"></div>
+            <div class="choice-options" id="choice-options"></div>
+        </div>
+
+        <!-- Mini-Game Overlay -->
+        <div id="minigame-overlay">
+            <div class="minigame-content">
+                <div class="minigame-title" id="minigame-title">Mini Game!</div>
+                <div id="minigame-area"></div>
+                <button class="menu-btn" onclick="closeMiniGame()">Close</button>
+            </div>
+        </div>
+
+        <!-- Achievement Popup -->
+        <div id="achievement-popup">
+            <div class="achievement-icon">🏆</div>
+            <div class="achievement-text" id="achievement-text">Achievement Unlocked!</div>
+        </div>
+
+        <!-- Shop Panel -->
+        <div id="shop-panel">
+            <div class="choice-title">Zoo Shop 🛒</div>
+            <div class="shop-items" id="shop-items"></div>
+            <button class="menu-btn" style="margin-top: 20px;" onclick="closeShop()">Close</button>
+        </div>
+    </div>
+
+    <script>
+        // Audio Context
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        function playSound(frequency, type = 'sine', duration = 0.1) {
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.frequency.value = frequency;
+            oscillator.type = type;
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + duration);
+        }
+
+        const sounds = {
+            click: () => playSound(800, 'square', 0.05),
+            success: () => {
+                [262, 330, 392].forEach((freq, i) => {
+                    setTimeout(() => playSound(freq, 'sine', 0.2), i * 100);
+                });
+            },
+            coin: () => playSound(1000, 'square', 0.1),
+            animal: () => playSound(400, 'triangle', 0.2),
+            achievement: () => {
+                [523, 659, 784, 1047].forEach((freq, i) => {
+                    setTimeout(() => playSound(freq, 'sine', 0.3), i * 150);
+                });
+            }
+        };
+
+        // Game State
+        const gameState = {
+            coins: 0,
+            happiness: 100,
+            level: 1,
+            visitors: 0,
+            currentExhibit: 'savanna',
+            animalStates: {},
+            achievements: [],
+            inventory: [],
+            totalInteractions: 0
+        };
+
+        // Exhibit Definitions
+        const exhibits = {
+            savanna: {
+                name: 'Savanna',
+                background: 'linear-gradient(135deg, #f4a460 0%, #daa520 100%)',
+                animals: ['🦁', '🦒', '🐘', '🦓', '🦏'],
+                currentAnimalIndex: 0
+            },
+            arctic: {
+                name: 'Arctic',
+                background: 'linear-gradient(135deg, #e0f7ff 0%, #b3e5fc 100%)',
+                animals: ['🐧', '🐻‍❄️', '🦭', '🐺', '🦌'],
+                currentAnimalIndex: 0
+            },
+            jungle: {
+                name: 'Jungle',
+                background: 'linear-gradient(135deg, #228b22 0%, #006400 100%)',
+                animals: ['🦍', '🐒', '🦜', '🐆', '🦥'],
+                currentAnimalIndex: 0
+            },
+            ocean: {
+                name: 'Ocean',
+                background: 'linear-gradient(135deg, #4da6ff 0%, #0066cc 100%)',
+                animals: ['🐬', '🐋', '🦈', '🐙', '🐠'],
+                currentAnimalIndex: 0
+            },
+            farm: {
+                name: 'Farm',
+                background: 'linear-gradient(135deg, #90ee90 0%, #7cb342 100%)',
+                animals: ['🐮', '🐷', '🐔', '🐑', '🐴'],
+                currentAnimalIndex: 0
+            }
+        };
+
+        // Shop Items
+        const shopItems = [
+            { id: 'premium_food', name: 'Premium Food', icon: '🥩', price: 50, effect: 'happiness', value: 20 },
+            { id: 'toy_ball', name: 'Toy Ball', icon: '⚽', price: 30, effect: 'happiness', value: 15 },
+            { id: 'fancy_habitat', name: 'Fancy Habitat', icon: '🏠', price: 100, effect: 'visitors', value: 10 },
+            { id: 'training_kit', name: 'Training Kit', icon: '📚', price: 75, effect: 'level', value: 1 },
+            { id: 'grooming_kit', name: 'Grooming Kit', icon: '✨', price: 40, effect: 'happiness', value: 10 },
+            { id: 'music_box', name: 'Music Box', icon: '🎵', price: 60, effect: 'happiness', value: 25 }
+        ];
+
+        // Canvas Setup
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            drawBackground();
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function drawBackground() {
+            const exhibit = exhibits[gameState.currentExhibit];
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+
+            // Parse gradient colors from exhibit background
+            if (exhibit.background.includes('f4a460')) {
+                gradient.addColorStop(0, '#f4a460');
+                gradient.addColorStop(1, '#daa520');
+            } else if (exhibit.background.includes('e0f7ff')) {
+                gradient.addColorStop(0, '#e0f7ff');
+                gradient.addColorStop(1, '#b3e5fc');
+            } else if (exhibit.background.includes('228b22')) {
+                gradient.addColorStop(0, '#228b22');
+                gradient.addColorStop(1, '#006400');
+            } else if (exhibit.background.includes('4da6ff')) {
+                gradient.addColorStop(0, '#4da6ff');
+                gradient.addColorStop(1, '#0066cc');
+            } else if (exhibit.background.includes('90ee90')) {
+                gradient.addColorStop(0, '#90ee90');
+                gradient.addColorStop(1, '#7cb342');
+            }
+
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw decorative elements
+            drawEnvironment();
+        }
+
+        function drawEnvironment() {
+            const exhibit = gameState.currentExhibit;
+
+            if (exhibit === 'savanna') {
+                // Draw grass and trees
+                ctx.fillStyle = 'rgba(139, 69, 19, 0.3)';
+                for (let i = 0; i < 5; i++) {
+                    ctx.fillRect(100 + i * 200, canvas.height - 50, 50, 50);
+                }
+            } else if (exhibit === 'arctic') {
+                // Draw snow and ice
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                for (let i = 0; i < 10; i++) {
+                    ctx.beginPath();
+                    ctx.arc(Math.random() * canvas.width, Math.random() * 200, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            } else if (exhibit === 'jungle') {
+                // Draw trees
+                ctx.fillStyle = 'rgba(34, 139, 34, 0.4)';
+                for (let i = 0; i < 8; i++) {
+                    ctx.fillRect(50 + i * 150, 50, 30, 100);
+                }
+            } else if (exhibit === 'ocean') {
+                // Draw waves
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.lineWidth = 3;
+                for (let i = 0; i < 5; i++) {
+                    ctx.beginPath();
+                    ctx.arc(100 + i * 200, canvas.height - 100, 50, 0, Math.PI, true);
+                    ctx.stroke();
+                }
+            } else if (exhibit === 'farm') {
+                // Draw fence
+                ctx.strokeStyle = 'rgba(139, 69, 19, 0.6)';
+                ctx.lineWidth = 5;
+                for (let i = 0; i < 10; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(i * 100, canvas.height - 150);
+                    ctx.lineTo(i * 100, canvas.height - 100);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        // Game Functions
+        function startGame() {
+            document.getElementById('main-menu').classList.add('hidden');
+            sounds.success();
+            updateDisplay();
+            startVisitorTimer();
+        }
+
+        function showInstructions() {
+            showNotification('🎮 Feed, play, clean, and train animals! Switch exhibits to meet new friends! Earn coins and unlock achievements! 🏆');
+        }
+
+        function changeExhibit(exhibitName) {
+            gameState.currentExhibit = exhibitName;
+            const exhibit = exhibits[exhibitName];
+
+            // Update active button
+            document.querySelectorAll('.exhibit-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-exhibit="${exhibitName}"]`).classList.add('active');
+
+            // Update animal
+            const currentAnimal = exhibit.animals[exhibit.currentAnimalIndex];
+            document.getElementById('current-animal').textContent = currentAnimal;
+
+            // Redraw background
+            drawBackground();
+
+            sounds.click();
+            showNotification(`Welcome to ${exhibit.name}! 🌟`);
+        }
+
+        function cycleAnimal() {
+            const exhibit = exhibits[gameState.currentExhibit];
+            exhibit.currentAnimalIndex = (exhibit.currentAnimalIndex + 1) % exhibit.animals.length;
+            const currentAnimal = exhibit.animals[exhibit.currentAnimalIndex];
+            document.getElementById('current-animal').textContent = currentAnimal;
+        }
+
+        function interactWithAnimal() {
+            const animalEl = document.getElementById('current-animal');
+            animalEl.classList.add('jumping');
+            sounds.animal();
+
+            setTimeout(() => {
+                animalEl.classList.remove('jumping');
+            }, 600);
+
+            // Random interaction rewards
+            if (Math.random() > 0.7) {
+                earnCoins(5);
+            }
+
+            gameState.totalInteractions++;
+            checkAchievements();
+        }
+
+        function feedAnimal() {
+            showChoicePanel('What will you feed? 🍎', [
+                { text: '🍎 Apple', coins: 2, happiness: 5 },
+                { text: '🥕 Carrot', coins: 3, happiness: 8 },
+                { text: '🥩 Meat', coins: 5, happiness: 15 },
+                { text: '🍰 Cake', coins: 10, happiness: 25 }
+            ], (choice) => {
+                if (gameState.coins >= choice.coins) {
+                    gameState.coins -= choice.coins;
+                    changeHappiness(choice.happiness);
+
+                    const animalEl = document.getElementById('current-animal');
+                    animalEl.classList.add('eating');
+                    setTimeout(() => animalEl.classList.remove('eating'), 800);
+
+                    sounds.success();
+                    showNotification(`Fed ${choice.text}! +${choice.happiness}% happiness! 😊`);
+                } else {
+                    showNotification('Not enough coins! 💰');
+                }
+                updateDisplay();
+            });
+        }
+
+        function playWithAnimal() {
+            showChoicePanel('How will you play? ⚽', [
+                { text: '⚽ Ball Game', type: 'ball' },
+                { text: '🧩 Memory Game', type: 'memory' },
+                { text: '🎯 Target Practice', type: 'target' },
+                { text: '🏃 Race Game', type: 'race' }
+            ], (choice) => {
+                if (choice.type === 'memory') {
+                    startMemoryGame();
+                } else if (choice.type === 'ball') {
+                    startBallGame();
+                } else if (choice.type === 'target') {
+                    startTargetGame();
+                } else if (choice.type === 'race') {
+                    startRaceGame();
+                }
+            });
+        }
+
+        function cleanAnimal() {
+            const animalEl = document.getElementById('current-animal');
+
+            showChoicePanel('How will you clean? 🧼', [
+                { text: '🚿 Shower', duration: 1000, happiness: 10 },
+                { text: '🛁 Bath', duration: 2000, happiness: 20 },
+                { text: '✨ Spa Treatment', duration: 3000, happiness: 35 },
+                { text: '💆 Full Grooming', duration: 4000, happiness: 50 }
+            ], (choice) => {
+                sounds.click();
+                showNotification('Cleaning... 🧼');
+
+                setTimeout(() => {
+                    changeHappiness(choice.happiness);
+                    earnCoins(Math.floor(choice.happiness / 2));
+                    sounds.success();
+                    showNotification(`Clean and fresh! +${choice.happiness}% happiness! ✨`);
+                    updateDisplay();
+                }, choice.duration);
+            });
+        }
+
+        function trainAnimal() {
+            showChoicePanel('What will you teach? 🎯', [
+                { text: '🎪 Tricks', difficulty: 1, reward: 10 },
+                { text: '🤸 Acrobatics', difficulty: 2, reward: 20 },
+                { text: '🎭 Performance', difficulty: 3, reward: 35 },
+                { text: '🎨 Art', difficulty: 4, reward: 50 }
+            ], (choice) => {
+                const success = Math.random() > (choice.difficulty * 0.15);
+
+                if (success) {
+                    earnCoins(choice.reward);
+                    changeHappiness(10);
+                    sounds.success();
+                    showNotification(`Training successful! +${choice.reward} coins! 🎓`);
+                } else {
+                    changeHappiness(-5);
+                    showNotification('Training failed! Try again! 📚');
+                }
+
+                updateDisplay();
+            });
+        }
+
+        function openShop() {
+            const shopPanel = document.getElementById('shop-panel');
+            const shopItemsContainer = document.getElementById('shop-items');
+            shopItemsContainer.innerHTML = '';
+
+            shopItems.forEach(item => {
+                const owned = gameState.inventory.includes(item.id);
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'shop-item' + (owned ? ' owned' : '');
+                itemDiv.innerHTML = `
+                    <div class="item-icon">${item.icon}</div>
+                    <div class="item-name">${item.name}</div>
+                    <div class="item-price">${owned ? 'OWNED' : item.price + ' 💰'}</div>
+                `;
+
+                if (!owned) {
+                    itemDiv.onclick = () => buyItem(item);
+                }
+
+                shopItemsContainer.appendChild(itemDiv);
+            });
+
+            shopPanel.classList.add('show');
+            sounds.click();
+        }
+
+        function closeShop() {
+            document.getElementById('shop-panel').classList.remove('show');
+            sounds.click();
+        }
+
+        function buyItem(item) {
+            if (gameState.coins >= item.price) {
+                gameState.coins -= item.price;
+                gameState.inventory.push(item.id);
+
+                if (item.effect === 'happiness') {
+                    changeHappiness(item.value);
+                } else if (item.effect === 'visitors') {
+                    gameState.visitors += item.value;
+                } else if (item.effect === 'level') {
+                    gameState.level += item.value;
+                }
+
+                sounds.success();
+                showNotification(`Purchased ${item.name}! 🎉`);
+                updateDisplay();
+                closeShop();
+                openShop();
+            } else {
+                showNotification('Not enough coins! 💰');
+            }
+        }
+
+        function showChoicePanel(title, choices, callback) {
+            const panel = document.getElementById('choice-panel');
+            const titleEl = document.getElementById('choice-title');
+            const optionsEl = document.getElementById('choice-options');
+
+            titleEl.textContent = title;
+            optionsEl.innerHTML = '';
+
+            choices.forEach(choice => {
+                const btn = document.createElement('button');
+                btn.className = 'choice-btn';
+                btn.textContent = choice.text;
+                btn.onclick = () => {
+                    panel.classList.remove('show');
+                    callback(choice);
+                };
+                optionsEl.appendChild(btn);
+            });
+
+            panel.classList.add('show');
+            sounds.click();
+        }
+
+        function startMemoryGame() {
+            const overlay = document.getElementById('minigame-overlay');
+            const title = document.getElementById('minigame-title');
+            const area = document.getElementById('minigame-area');
+
+            title.textContent = '🧩 Animal Memory Match';
+
+            const animals = ['🦁', '🐘', '🦒', '🐧', '🐬', '🦍', '🐯', '🐨'];
+            const cards = [...animals, ...animals].sort(() => Math.random() - 0.5);
+
+            let flipped = [];
+            let matched = 0;
+
+            area.innerHTML = '<div class="memory-grid" id="memory-grid"></div>';
+            const grid = document.getElementById('memory-grid');
+
+            cards.forEach((animal, index) => {
+                const card = document.createElement('div');
+                card.className = 'memory-card';
+                card.dataset.animal = animal;
+                card.dataset.index = index;
+                card.textContent = '❓';
+
+                card.onclick = () => {
+                    if (flipped.length < 2 && !card.classList.contains('flipped')) {
+                        card.classList.add('flipped');
+                        card.textContent = animal;
+                        flipped.push(card);
+                        sounds.click();
+
+                        if (flipped.length === 2) {
+                            setTimeout(() => {
+                                if (flipped[0].dataset.animal === flipped[1].dataset.animal) {
+                                    flipped[0].classList.add('matched');
+                                    flipped[1].classList.add('matched');
+                                    matched += 2;
+                                    sounds.success();
+
+                                    if (matched === cards.length) {
+                                        earnCoins(30);
+                                        changeHappiness(20);
+                                        showNotification('Memory game complete! +30 coins! 🎉');
+                                        updateDisplay();
+                                        setTimeout(() => closeMiniGame(), 1500);
+                                    }
+                                } else {
+                                    flipped[0].classList.remove('flipped');
+                                    flipped[1].classList.remove('flipped');
+                                    flipped[0].textContent = '❓';
+                                    flipped[1].textContent = '❓';
+                                }
+                                flipped = [];
+                            }, 800);
+                        }
+                    }
+                };
+
+                grid.appendChild(card);
+            });
+
+            overlay.classList.add('show');
+        }
+
+        function startBallGame() {
+            const overlay = document.getElementById('minigame-overlay');
+            const title = document.getElementById('minigame-title');
+            const area = document.getElementById('minigame-area');
+
+            title.textContent = '⚽ Catch the Ball!';
+            area.innerHTML = `
+                <div style="position: relative; height: 300px; background: rgba(0,0,0,0.2); border-radius: 15px; overflow: hidden;">
+                    <div id="ball-game-ball" style="position: absolute; font-size: 40px; cursor: pointer;">⚽</div>
+                    <div style="position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); color: white; font-size: 20px; font-weight: bold;">
+                        Score: <span id="ball-score">0</span>
+                    </div>
+                </div>
+            `;
+
+            const ball = document.getElementById('ball-game-ball');
+            let score = 0;
+            let gameTime = 15;
+
+            function moveBall() {
+                ball.style.left = Math.random() * 90 + '%';
+                ball.style.top = Math.random() * 80 + '%';
+            }
+
+            ball.onclick = () => {
+                score++;
+                document.getElementById('ball-score').textContent = score;
+                sounds.coin();
+                moveBall();
+            };
+
+            moveBall();
+
+            const timer = setInterval(() => {
+                gameTime--;
+                if (gameTime <= 0) {
+                    clearInterval(timer);
+                    const reward = score * 2;
+                    earnCoins(reward);
+                    changeHappiness(score);
+                    showNotification(`Game over! Score: ${score}. +${reward} coins! 🎉`);
+                    updateDisplay();
+                    setTimeout(() => closeMiniGame(), 2000);
+                }
+            }, 1000);
+
+            overlay.classList.add('show');
+        }
+
+        function startTargetGame() {
+            const overlay = document.getElementById('minigame-overlay');
+            const title = document.getElementById('minigame-title');
+            const area = document.getElementById('minigame-area');
+
+            title.textContent = '🎯 Hit the Targets!';
+            area.innerHTML = `
+                <div style="position: relative; height: 300px; background: rgba(0,0,0,0.2); border-radius: 15px;">
+                    <div style="color: white; text-align: center; padding: 20px; font-size: 24px;">
+                        Click the targets as they appear!
+                    </div>
+                    <div id="target-container" style="position: relative; height: 200px;"></div>
+                    <div style="text-align: center; color: white; font-size: 20px; font-weight: bold;">
+                        Hits: <span id="target-score">0</span>
+                    </div>
+                </div>
+            `;
+
+            const container = document.getElementById('target-container');
+            let hits = 0;
+            let targetCount = 10;
+
+            function createTarget() {
+                if (targetCount <= 0) return;
+
+                const target = document.createElement('div');
+                target.textContent = '🎯';
+                target.style.cssText = `
+                    position: absolute;
+                    font-size: 50px;
+                    cursor: pointer;
+                    left: ${Math.random() * 85}%;
+                    top: ${Math.random() * 70}%;
+                `;
+
+                target.onclick = () => {
+                    hits++;
+                    document.getElementById('target-score').textContent = hits;
+                    target.remove();
+                    sounds.coin();
+                    targetCount--;
+
+                    if (targetCount <= 0) {
+                        const reward = hits * 3;
+                        earnCoins(reward);
+                        changeHappiness(hits * 2);
+                        showNotification(`Perfect! +${reward} coins! 🎯`);
+                        updateDisplay();
+                        setTimeout(() => closeMiniGame(), 2000);
+                    } else {
+                        setTimeout(createTarget, 500);
+                    }
+                };
+
+                container.appendChild(target);
+
+                setTimeout(() => {
+                    if (target.parentNode) {
+                        target.remove();
+                        createTarget();
+                    }
+                }, 2000);
+            }
+
+            createTarget();
+            overlay.classList.add('show');
+        }
+
+        function startRaceGame() {
+            const overlay = document.getElementById('minigame-overlay');
+            const title = document.getElementById('minigame-title');
+            const area = document.getElementById('minigame-area');
+
+            title.textContent = '🏃 Animal Race!';
+            area.innerHTML = `
+                <div style="background: rgba(0,0,0,0.2); border-radius: 15px; padding: 20px;">
+                    <div style="color: white; margin-bottom: 20px; font-size: 18px;">Click rapidly to win the race!</div>
+                    <div style="margin-bottom: 15px;">
+                        <div style="color: white; margin-bottom: 5px;">Your Animal: ${document.getElementById('current-animal').textContent}</div>
+                        <div class="progress-container">
+                            <div class="progress-bar" id="player-progress" style="width: 0%;">0%</div>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <div style="color: white; margin-bottom: 5px;">Opponent: 🐢</div>
+                        <div class="progress-container">
+                            <div class="progress-bar" id="opponent-progress" style="width: 0%; background: linear-gradient(90deg, #ff6b6b, #ff8787);"></div>
+                        </div>
+                    </div>
+                    <button class="menu-btn" id="race-btn" style="width: 100%;">GO! GO! GO!</button>
+                </div>
+            `;
+
+            let playerProgress = 0;
+            let opponentProgress = 0;
+            let raceActive = true;
+
+            const btn = document.getElementById('race-btn');
+            const playerBar = document.getElementById('player-progress');
+            const opponentBar = document.getElementById('opponent-progress');
+
+            btn.onclick = () => {
+                if (raceActive && playerProgress < 100) {
+                    playerProgress += Math.random() * 8 + 5;
+                    playerProgress = Math.min(100, playerProgress);
+                    playerBar.style.width = playerProgress + '%';
+                    playerBar.textContent = Math.floor(playerProgress) + '%';
+                    sounds.click();
+
+                    if (playerProgress >= 100 && raceActive) {
+                        raceActive = false;
+                        earnCoins(50);
+                        changeHappiness(30);
+                        showNotification('You won the race! +50 coins! 🏆');
+                        updateDisplay();
+                        setTimeout(() => closeMiniGame(), 2000);
+                    }
+                }
+            };
+
+            const opponentInterval = setInterval(() => {
+                if (!raceActive) {
+                    clearInterval(opponentInterval);
+                    return;
+                }
+
+                opponentProgress += Math.random() * 4 + 2;
+                opponentProgress = Math.min(100, opponentProgress);
+                opponentBar.style.width = opponentProgress + '%';
+
+                if (opponentProgress >= 100 && raceActive) {
+                    raceActive = false;
+                    clearInterval(opponentInterval);
+                    changeHappiness(-10);
+                    showNotification('You lost! Better luck next time! 🐢');
+                    updateDisplay();
+                    setTimeout(() => closeMiniGame(), 2000);
+                }
+            }, 200);
+
+            overlay.classList.add('show');
+        }
+
+        function closeMiniGame() {
+            document.getElementById('minigame-overlay').classList.remove('show');
+            sounds.click();
+        }
+
+        function earnCoins(amount) {
+            gameState.coins += amount;
+            sounds.coin();
+        }
+
+        function changeHappiness(amount) {
+            gameState.happiness = Math.max(0, Math.min(100, gameState.happiness + amount));
+
+            if (gameState.happiness >= 100) {
+                gameState.level++;
+                showNotification('Level up! 🎉');
+                sounds.achievement();
+            }
+        }
+
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.classList.add('show');
+
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        function updateDisplay() {
+            document.getElementById('coins').textContent = gameState.coins;
+            document.getElementById('happiness').textContent = gameState.happiness;
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('visitors').textContent = gameState.visitors;
+        }
+
+        function startVisitorTimer() {
+            setInterval(() => {
+                if (gameState.happiness > 50) {
+                    const newVisitors = Math.floor(Math.random() * 3) + 1;
+                    gameState.visitors += newVisitors;
+                    earnCoins(newVisitors);
+                    updateDisplay();
+                }
+            }, 10000);
+        }
+
+        function checkAchievements() {
+            const achievements = [
+                { id: 'first_interaction', condition: gameState.totalInteractions >= 1, text: 'First Friend!' },
+                { id: 'animal_lover', condition: gameState.totalInteractions >= 50, text: 'Animal Lover!' },
+                { id: 'rich', condition: gameState.coins >= 100, text: 'Zoo Tycoon!' },
+                { id: 'happy_zoo', condition: gameState.happiness >= 100, text: 'Happiness Master!' },
+                { id: 'visitor_magnet', condition: gameState.visitors >= 50, text: 'Visitor Magnet!' },
+                { id: 'expert', condition: gameState.level >= 5, text: 'Zoo Expert!' }
+            ];
+
+            achievements.forEach(achievement => {
+                if (achievement.condition && !gameState.achievements.includes(achievement.id)) {
+                    gameState.achievements.push(achievement.id);
+                    showAchievement(achievement.text);
+                }
+            });
+        }
+
+        function showAchievement(text) {
+            const popup = document.getElementById('achievement-popup');
+            document.getElementById('achievement-text').textContent = text;
+            popup.classList.add('show');
+            sounds.achievement();
+
+            setTimeout(() => {
+                popup.classList.remove('show');
+            }, 3000);
+        }
+
+        // Initialize
+        window.addEventListener('load', () => {
+            console.log('🦁 Zoo Adventure Game Loaded!');
+            drawBackground();
+        });
+
+        // Allow clicking on animal to cycle through animals in exhibit
+        setInterval(() => {
+            // Randomly cycle animals occasionally for variety
+            if (Math.random() > 0.95) {
+                cycleAnimal();
+            }
+        }, 5000);
+    </script>
+</body>
+</html>
